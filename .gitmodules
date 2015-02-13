@@ -1,0 +1,6 @@
+[submodule "pandoc-templates"]
+	path = slides/pandoc-templates
+	url = git@github.com:drostron/pandoc-templates.git
+[submodule "slides/reveal.js"]
+	path = slides/reveal.js
+	url = git@github.com:hakimel/reveal.js.git
