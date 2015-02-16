@@ -1,14 +1,14 @@
 DIST = gh-pages-dist
+DESTINATION = $(DIST)/slides/pdxscala-2015-february
 SLIDES = slides
 REVEALJS = reveal.js
-DIST_SLIDES = $(DIST)/$(SLIDES)
 
 dist:
-	mkdir -p $(DIST_SLIDES)/$(REVEALJS)
-	cp $(SLIDES)/index.html $(DIST_SLIDES)/
+	mkdir -p $(DESTINATION)/$(REVEALJS)
+	cp $(SLIDES)/index.html $(DESTINATION)/
 	for i in resources $(REVEALJS)/LICENSE $(REVEALJS)/css $(REVEALJS)/js $(REVEALJS)/lib $(REVEALJS)/plugin; do \
 		echo $$i ; \
-		cp -R $(SLIDES)/$$i $(DIST_SLIDES)/$$i ; \
+		cp -R $(SLIDES)/$$i $(DESTINATION)/$$i ; \
 	done
 
 push-gh-pages-dist:

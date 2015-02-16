@@ -478,4 +478,6 @@ Thanks!
 
 repo : [rtree-explorations](https://github.com/drostron/rtree-explorations)
 
-<img src="resources/shapeless-such-future-so-bright.jpg" style="width: 55%; margin-top: 1em">
+slides : [Generic N-Dim R-Tree Explorations](http://drostron.github.io/rtree-explorations/slides/pdxscala-2015-february/index.html)
+
+<img src="resources/shapeless-such-future-so-bright.jpg" style="width: 52%; margin-top: 0.5em">
