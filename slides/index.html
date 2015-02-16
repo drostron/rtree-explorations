@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title></title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css"/>
+    <style type="text/css">code{white-space: pre;}</style>
+    <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #303030; color: #cccccc; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; }
+td.sourceCode { padding-left: 5px; }
+pre, code { color: #cccccc; background-color: #303030; }
+code > span.kw { color: #f0dfaf; }
+code > span.dt { color: #dfdfbf; }
+code > span.dv { color: #dcdccc; }
+code > span.bn { color: #dca3a3; }
+code > span.fl { color: #c0bed1; }
+code > span.ch { color: #dca3a3; }
+code > span.st { color: #cc9393; }
+code > span.co { color: #7f9f7f; }
+code > span.ot { color: #efef8f; }
+code > span.al { color: #ffcfaf; }
+code > span.fu { color: #efef8f; }
+code > span.er { color: #c3bf9f; }
+    </style>
+    <link rel="stylesheet" href="reveal.js/css/theme/simple.css" id="theme">
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+    </script>
+    <!--[if lt IE 9]>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+    <style type="text/css">
+    
+    code {
+     font-size: 24px;
+    }
+    
+    .reveal h1 {
+      font-size: 2.8em; }
+    
+    .reveal h2 {
+      font-size: 2.1em; }
+    
+    .reveal section img {
+      border: 0px;
+      box-shadow: none;
+    }
+    
+    .reveal .slides {
+      text-align: left;
+      margin-top: 0.2em;
+    }
+    
+    .reveal blockquote {
+      margin-left: 0px;
+    }
+    
+    .reveal pre {
+      width: 100%;
+      margin-left: 0px;
+    }
+    
+    .reveal pre code {
+      max-height: 92%;
+    }
+    
+    </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section id="generic-n-dim-r-tree-explorations" class="slide level1">
+<h1>Generic N-Dim <br> R-Tree Explorations</h1>
+<p><em>or how I learned to calm the hyperspatial index</em></p>
+<p><a href="http://github.com/drostron">Dave Rostron</a> — <a href="http://twitter.com/yastero">@yastero</a></p>
+<p>Feb 17, 2015</p>
+</section>
+<section class="slide level1">
+
+<blockquote>
+<p>All our wisdom is stored in the trees.</p>
+<p>— Santosh Kalwar</p>
+</blockquote>
+</section>
+<section class="slide level1">
+
+<h2 id="opening-notes-and-such">opening notes and such</h2>
+<ul>
+<li class="fragment">presentation plan? perhaps depends on how long this gets</li>
+<li class="fragment">warning: this is not complete</li>
+<li class="fragment">just a place for exploration</li>
+<li class="fragment">more of a chance to dig into shapeless than look in depth at R-Trees</li>
+<li class="fragment">help me if you know someting that I left out or could improve on, no claims of expertise, just having some fun, join me</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="exploration-inspiration">exploration inspiration</h2>
+<div class="fragment">
+<p>“Designing Data-Intensive Applications” by Martin Kleppmann (<em>recommended</em>)</p>
+<p><img src="resources/designing-data-intensive-applications-cover.png" style="width: 25%;"></p>
+</div>
+</section>
+<section class="slide level1">
+
+<h2 id="how-do-we-find-the-needle-in-the-haystack">how do we find the needle in the haystack?</h2>
+<ul>
+<li class="fragment">could scan through the whole stack</li>
+<li class="fragment">maybe there’s something faster</li>
+<li class="fragment">B-Tree to the rescue <img src="resources/B-tree.svg" style="width: 55%; display: block"></li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="wait-we-want-to-index-our-data-over-multiple-dimensions">wait, we want to index our data over multiple dimensions</h2>
+<ul>
+<li class="fragment">could get part of the way there with a B-Tree but what about a range query over both dimensions?</li>
+<li class="fragment">R-Tree to the rescue <img src="resources/R-tree.svg" style="width: 50%; display: block"></li>
+</ul>
+</section>
+<section class="slide level1">
+
+<p>R-Tree Overview</p>
+<ul>
+<li class="fragment">spatial n-dimensional index <img src="resources/RTree-Visualization-3D.svg" style="width: 50%; display: block"></li>
+<li class="fragment">variants: M-Tree, X-Tree, Hilbert R-tree</li>
+<li class="fragment">sounds useful, tell us more…</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<p>how bout some code</p>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> Data2D {
+     |   <span class="kw">case</span> <span class="kw">class</span> Point[T](x: T, y: T)
+     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
+     |   <span class="kw">case</span> <span class="kw">class</span> Box[T](xLower: T, xUpper: T, yLower: T, yUpper: T) <span class="co">// inclusive</span>
+     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Node[V, T](
+     |     box: Box[T], left: RTree[V, T], right: RTree[V, T])
+     |     <span class="kw">extends</span> RTree[V, T]
+     | }
+defined <span class="kw">trait</span> Data2D
+
+scala&gt; <span class="kw">object</span> data2D <span class="kw">extends</span> Data2D
+defined <span class="kw">object</span> data2D</code></pre>
+</div>
+</section>
+<section class="slide level1">
+
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> data2D.<span class="fu">_</span>, spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>, math.{ min, max }, implicits.<span class="fu">_</span>
+<span class="kw">import</span> data2D.<span class="fu">_</span>
+<span class="kw">import</span> spire.<span class="fu">_</span>
+<span class="kw">import</span> algebra.<span class="fu">_</span>
+<span class="kw">import</span> math.{min, max}
+<span class="kw">import</span> implicits.<span class="fu">_</span>
+
+scala&gt; <span class="kw">trait</span> Ops2D {
+     |   <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
+     |   <span class="kw">def</span> expandBox[T : Order](box: Box[T], point: Point[T]): Box[T]
+     |   <span class="kw">def</span> expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T]
+     |   <span class="kw">def</span> withinBox[T : Order](box: Box[T], point: Point[T]): Boolean
+     |   <span class="kw">def</span> overlaps[T : Order](box1: Box[T], box2: Box[T]): Boolean
+     |   <span class="kw">def</span> add[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T]
+     |   <span class="kw">def</span> remove[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T]
+     |   <span class="kw">def</span> find[V, T](rtree: RTree[V, T], point: Point[T]): Option[Entry[V, T]]
+     |   <span class="kw">def</span> contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean
+     |   <span class="kw">def</span> search[V, T](space: Box[T]): List[Entry[V, T]]
+     | }
+defined <span class="kw">trait</span> Ops2D</code></pre>
+</section>
+<section class="slide level1">
+
+<p>types might be sufficient for this part of the story and save impl for HList version?</p>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">object</span> ops2D <span class="kw">extends</span> Ops2D {
+     |   <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T] = Box(
+     |     <span class="fu">min</span>(point1.<span class="fu">x</span>, point2.<span class="fu">x</span>), <span class="fu">max</span>(point1.<span class="fu">x</span>, point2.<span class="fu">x</span>),
+     |     <span class="fu">min</span>(point1.<span class="fu">y</span>, point2.<span class="fu">y</span>), <span class="fu">max</span>(point1.<span class="fu">y</span>, point2.<span class="fu">y</span>))
+     |   <span class="kw">def</span> expandBox[T : Order](box: Box[T], point: Point[T]): Box[T] = Box(
+     |     <span class="fu">min</span>(box.<span class="fu">xLower</span>, point.<span class="fu">x</span>), <span class="fu">max</span>(box.<span class="fu">xUpper</span>, point.<span class="fu">x</span>),
+     |     <span class="fu">min</span>(box.<span class="fu">yLower</span>, point.<span class="fu">y</span>), <span class="fu">max</span>(box.<span class="fu">yUpper</span>, point.<span class="fu">y</span>))
+     |   <span class="kw">def</span> expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T] = Box(
+     |     <span class="fu">min</span>(box1.<span class="fu">xLower</span>, box2.<span class="fu">xLower</span>), <span class="fu">max</span>(box1.<span class="fu">xUpper</span>, box2.<span class="fu">xUpper</span>),
+     |     <span class="fu">min</span>(box1.<span class="fu">yLower</span>, box2.<span class="fu">yLower</span>), <span class="fu">max</span>(box1.<span class="fu">yUpper</span>, box2.<span class="fu">yUpper</span>))
+     |   <span class="kw">def</span> withinBox[T : Order](box: Box[T], point: Point[T]): Boolean =
+     |     box.<span class="fu">xLower</span> &lt;= point.<span class="fu">x</span> &amp;&amp; point.<span class="fu">x</span> &lt;= box.<span class="fu">xUpper</span> &amp;&amp;
+     |     box.<span class="fu">yLower</span> &lt;= point.<span class="fu">y</span> &amp;&amp; point.<span class="fu">y</span> &lt;= box.<span class="fu">yUpper</span>
+     |   <span class="kw">def</span> overlaps[T : Order](box1: Box[T], box2: Box[T]): Boolean =
+     |     box1.<span class="fu">xLower</span> &lt;= box2.<span class="fu">xUpper</span> &amp;&amp; box1.<span class="fu">xUpper</span> &gt;= box2.<span class="fu">xLower</span> &amp;&amp;
+     |     box1.<span class="fu">yLower</span> &lt;= box2.<span class="fu">yUpper</span> &amp;&amp; box1.<span class="fu">yUpper</span> &gt;= box2.<span class="fu">yLower</span>
+     |   <span class="kw">def</span> add[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T] = ???
+     |   <span class="kw">def</span> remove[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T] = ???
+     |   <span class="kw">def</span> find[V, T](rtree: RTree[V, T], point: Point[T]): Option[Entry[V, T]] = ???
+     |   <span class="kw">def</span> contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean = ???
+     |   <span class="kw">def</span> search[V, T](space: Box[T]): List[Entry[V, T]] = ???
+     | }
+defined <span class="kw">object</span> ops2D</code></pre>
+</section>
+<section class="slide level1">
+
+<p>what if we have more than 2 dimensions?</p>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> DataDynamicNDim {
+     |   <span class="kw">case</span> <span class="kw">class</span> Point[T](terms: List[T])
+     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
+     |   <span class="kw">case</span> <span class="kw">class</span> Box[T](lowerBounds: List[T], upperBounds: List[T])
+     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Node[V, T](
+     |     box: Box[T], left: RTree[V, T], right: RTree[V, T])
+     |     <span class="kw">extends</span> RTree[V, T]
+     | }
+defined <span class="kw">trait</span> DataDynamicNDim</code></pre>
+</div>
+</section>
+<section class="slide level1">
+
+<blockquote>
+<p>Traveling through hyperspace ain’t like dusting crops, farm boy. Without precise calculations we could fly right through a star or bounce too close to a supernova, and that’d end your trip real quick, wouldn’t it?</p>
+<p>— Han Solo, Star Wars Episode IV: A New Hope</p>
+</blockquote>
+<div class="fragment">
+<p><img src="resources/millennium-falcon-hyperspace.gif" style="width: 75%"></p>
+</div>
+</section>
+<section class="slide level1">
+
+<p>I hear type systems perform calculations</p>
+<div class="fragment">
+<p>and support a class of constraints</p>
+</div>
+<div class="fragment">
+<p>there’s a library that explores this space</p>
+</div>
+<div class="fragment">
+<p>shapeless : supercharged generic coding</p>
+</div>
+</section>
+<section class="slide level1">
+
+<blockquote>
+<p>Empty your mind, be formless. Shapeless, like water.</p>
+<p>— Bruce Lee</p>
+</blockquote>
+<div class="fragment">
+<p><img src="resources/bruce-lee.jpeg" style="width: 40%"></p>
+</div>
+<div class="fragment">
+<p>let’s build a well typed Generic N-Dim R-Tree</p>
+</div>
+</section>
+<section class="slide level1">
+
+<p>shapeless Sized</p>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> shapeless.<span class="fu">_</span>, ops.<span class="fu">nat</span>.<span class="fu">_</span>
+<span class="kw">import</span> shapeless.<span class="fu">_</span>
+<span class="kw">import</span> ops.<span class="fu">nat</span>.<span class="fu">_</span>
+
+scala&gt; <span class="kw">trait</span> DataSizedNDim {
+     |   <span class="kw">case</span> <span class="kw">class</span> Point[T, N &lt;: Nat](terms: Sized[Seq[T], N])
+     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T, N &lt;: Nat](value: V, point: Point[T, N])
+     |   <span class="kw">case</span> <span class="kw">class</span> Interval[T](l: T, u: T)
+     |   <span class="kw">case</span> <span class="kw">class</span> Box[T, N &lt;: Nat](intervals: Sized[Seq[Interval[T]], N])
+     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[T, N &lt;: Nat]
+     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[T, N &lt;: Nat](point: Point[T, N]) <span class="kw">extends</span> RTree[T, N]
+     |   <span class="kw">case</span> <span class="kw">class</span> Node[T, N &lt;: Nat](
+     |     bound: Box[T, N], left: RTree[T, N], right: RTree[T, N])
+     |     <span class="kw">extends</span> RTree[T, N]
+     | }
+defined <span class="kw">trait</span> DataSizedNDim</code></pre>
+</div>
+<div class="fragment">
+<p>perhaps, what if we want heterogeneous types for our dimensions?</p>
+</div>
+</section>
+<section class="slide level1">
+
+<p>shapeless HList</p>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> DataHListNDim {
+     |   <span class="kw">case</span> <span class="kw">class</span> Point[T &lt;: HList](terms: T)
+     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T &lt;: HList](value: V, point: Point[T])
+     |   <span class="kw">case</span> <span class="kw">class</span> Box[T &lt;: HList](lowerBounds: T, upperBounds: T) <span class="co">// inclusive</span>
+     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T &lt;: HList]
+     |   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T &lt;: HList]() <span class="kw">extends</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T &lt;: HList](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
+     |   <span class="kw">case</span> <span class="kw">class</span> Node[V, T &lt;: HList](
+     |     box: Box[T], left: RTree[V, T], right: RTree[V, T])
+     |     <span class="kw">extends</span> RTree[V, T]
+     | }
+defined <span class="kw">trait</span> DataHListNDim
+
+scala&gt; <span class="kw">object</span> dataHListNDim <span class="kw">extends</span> DataHListNDim
+defined <span class="kw">object</span> dataHListNDim</code></pre>
+</div>
+<div class="fragment">
+<p>looks promising</p>
+</div>
+</section>
+<section class="slide level1">
+
+<p>note: intentionally postponed a few items</p>
+<ul>
+<li class="fragment">balancing</li>
+<li class="fragment">splitting</li>
+<li class="fragment">performance</li>
+<li class="fragment">heterogeneous distance function (<em>similarity</em>)</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>
+<span class="kw">import</span> dataHListNDim.<span class="fu">_</span>
+<span class="kw">import</span> shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>
+
+scala&gt; <span class="kw">trait</span> OpsHListFunctions {
+     |   <span class="kw">object</span> minimum <span class="kw">extends</span> Poly2 {
+     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](implicitly[Order[T]].<span class="fu">min</span>)
+     |   }
+     |   <span class="kw">object</span> maximum <span class="kw">extends</span> Poly2 {
+     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](implicitly[Order[T]].<span class="fu">max</span>)
+     |   }
+     |   <span class="kw">object</span> lte <span class="kw">extends</span> Poly2 {
+     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](_ &lt;= _)
+     |   }
+     |   <span class="kw">object</span> gte <span class="kw">extends</span> Poly2 {
+     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](_ &gt;= _)
+     |   }
+     |   <span class="kw">object</span> and <span class="kw">extends</span> Poly2 {
+     |     <span class="kw">implicit</span> <span class="kw">def</span> caseBoolean = at[Boolean, Boolean](_ &amp;&amp; _)
+     |   }
+     | }
+defined <span class="kw">trait</span> OpsHListFunctions</code></pre>
+</section>
+<section class="slide level1">
+
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> OpsHListTypes { self: OpsHListFunctions =&gt;
+     |   <span class="kw">type</span> ZWMin[T &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, minimum.<span class="fu">type</span>, T]
+     |   <span class="kw">type</span> ZWMax[T &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, maximum.<span class="fu">type</span>, T]
+     |   <span class="kw">type</span> ZWLB[T &lt;: HList] = {
+     |     <span class="kw">type</span> λ[U &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, lte.<span class="fu">type</span>, U]
+     |   }
+     |   <span class="kw">type</span> ZWUB[T &lt;: HList] = {
+     |     <span class="kw">type</span> λ[U &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, gte.<span class="fu">type</span>, U]
+     |   }
+     |   <span class="kw">type</span> LFLB[T &lt;: HList] = {
+     |     <span class="kw">type</span> λ[U &lt;: HList] =
+     |       LeftFolder.<span class="fu">Aux</span>[
+     |         ZipWith.<span class="fu">Aux</span>[T, T, lte.<span class="fu">type</span>, U]#Out,
+     |         Boolean,
+     |         and.<span class="fu">type</span>,
+     |         Boolean]
+     |   }
+     |   <span class="kw">type</span> LFUB[T &lt;: HList] = {
+     |     <span class="kw">type</span> λ[U &lt;: HList] =
+     |       LeftFolder.<span class="fu">Aux</span>[
+     |         ZipWith.<span class="fu">Aux</span>[T, T, gte.<span class="fu">type</span>, U]#Out,
+     |         Boolean,
+     |         and.<span class="fu">type</span>,
+     |         Boolean]
+     |   }
+     | }
+defined <span class="kw">trait</span> OpsHListTypes</code></pre>
+</section>
+<section class="slide level1">
+
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> OpsHList <span class="kw">extends</span> OpsHListFunctions <span class="kw">with</span> OpsHListTypes {
+     |   <span class="kw">def</span> initBox
+     |     [T &lt;: HList : ZWMin : ZWMax]
+     |     (point1: Point[T], point2: Point[T])
+     |     : Box[T] = Box(
+     |     point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(minimum),
+     |     point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(maximum))
+     |   <span class="kw">def</span> expandBox
+     |     [T &lt;: HList : ZWMin : ZWMax]
+     |     (box: Box[T], point: Point[T])
+     |     : Box[T] = Box(
+     |     box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(minimum),
+     |     box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(maximum))
+     |   <span class="kw">def</span> withinBox
+     |     [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
+     |     (box: Box[T], point: Point[T])
+     |     : Boolean =
+     |     box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(lte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and) &amp;&amp;
+     |     box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(gte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and)
+     |   <span class="kw">def</span> overlaps
+     |     [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
+     |     (box1: Box[T], box2: Box[T])
+     |     : Boolean =
+     |     box1.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(box2.<span class="fu">upperBounds</span>)(lte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and) &amp;&amp;
+     |     box1.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(box2.<span class="fu">lowerBounds</span>)(gte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and)
+     | }
+defined <span class="kw">trait</span> OpsHList</code></pre>
+<div class="fragment">
+<p>incomplete implementation for for sake of brevity</p>
+</div>
+</section>
+<section class="slide level1">
+
+<p>still with me? good, let’s speed this up a bit.</p>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> ndimrtree.<span class="fu">_</span>, NDimRTree.<span class="fu">_</span>
+<span class="kw">import</span> ndimrtree.<span class="fu">_</span>
+<span class="kw">import</span> NDimRTree.<span class="fu">_</span>
+
+scala&gt; <span class="kw">val</span> b1 = <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="dv">3</span> :: HNil))
+b1: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">1</span> :: HNil,<span class="dv">3</span> :: HNil)
+
+scala&gt; <span class="kw">val</span> b2 = <span class="fu">initBox</span>(Point(<span class="dv">2</span> :: HNil), Point(<span class="dv">4</span> :: HNil))
+b2: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">2</span> :: HNil,<span class="dv">4</span> :: HNil)
+
+scala&gt; <span class="kw">import</span> shapeless.<span class="fu">test</span>.<span class="fu">_</span>
+<span class="kw">import</span> shapeless.<span class="fu">test</span>.<span class="fu">_</span>
+
+scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
+     | <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="st">&quot;a&quot;</span> :: HNil))
+     | <span class="st">&quot;&quot;&quot;)</span>
+
+scala&gt; <span class="fu">expandBox</span>(b1, b2)
+res1: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">1</span> :: HNil,<span class="dv">4</span> :: HNil)
+
+scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
+     | <span class="fu">expandBox</span>(b1, b3)
+     | <span class="st">&quot;&quot;&quot;)</span>
+
+scala&gt; <span class="kw">val</span> t1: RTree[String, Int :: Double :: HNil] = <span class="fu">RTree</span>(List(<span class="fu">Entry</span>(<span class="st">&quot;z&quot;</span>, Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil))))
+t1: ndimrtree.<span class="fu">RTree</span>[String,shapeless.::[Int,shapeless.::[Double,shapeless.<span class="fu">HNil</span>]]] = <span class="fu">Leaf</span>(<span class="fu">Entry</span>(z,Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil)))
+
+scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
+     | <span class="kw">val</span> t1: RTree[String, Int :: Long :: HNil] = <span class="fu">RTree</span>(List(<span class="fu">Entry</span>(<span class="st">&quot;z&quot;</span>, Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil))))
+     | <span class="st">&quot;&quot;&quot;)</span></code></pre>
+</div>
+</section>
+<section class="slide level1">
+
+<p><em>a few more examples here</em></p>
+</section>
+<section class="slide level1">
+
+<p><em>show a scalacheck example</em></p>
+<p><em>show results</em></p>
+</section>
+<section class="slide level1">
+
+<p>fun things explored</p>
+<ul>
+<li class="fragment">rtrees (but you already know that)</li>
+<li class="fragment">indexes</li>
+<li class="fragment">typelevel generic programming
+<ul>
+<li class="fragment">hlists, map, zip, etc operations over hlists</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level1">
+
+<p>libraries utilized</p>
+<p><em>add brief description of how each was utilized</em></p>
+<ul>
+<li><a href="https://github.com/milessabin/shapeless">shapeless</a> : Generic programming for Scala</li>
+<li><a href="https://github.com/non/spire">spire</a> : Powerful new number types and numeric abstractions for Scala</li>
+<li><a href="https://github.com/rickynils/scalacheck">scalacheck</a> : Property-based testing for Scala</li>
+<li><a href="https://github.com/alexarchambault/scalacheck-shapeless">scalacheck-shapeless</a> : Generation of arbitrary case classes / ADTs with scalacheck and shapeless</li>
+<li><a href="https://github.com/meetup/archery">archery</a> : 2D R-Tree implementation in Scala</li>
+<li>leveraged for scalacheck tests and benchmarking</li>
+<li><a href="https://github.com/Ichoran/thyme">thyme</a> - microbenchmark utility for Scala</li>
+<li><a href="https://github.com/scalaz/scalaz">scalaz</a> - An extension to the core Scala library for functional programming
+<ul>
+<li>utilized mostly for type-safe equality (<em>looking forward to cats</em>)</li>
+</ul></li>
+<li><a href="https://github.com/tpolecat/tut">tut</a> - doc/tutorial generator for scala
+<ul>
+<li>sending the code you’ve been looking at to scalac</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level1">
+
+<p>initial performance comparisons tests:</p>
+<p>plenty of room for improvement. just a first naive pass at the moment. if interested let’s hack together.</p>
+</section>
+<section class="slide level1">
+
+<p>caveats:</p>
+<p>don’t use this in production or if you think it is useful let’s crisp up the implementation together</p>
+</section>
+<section class="slide level1">
+
+<p>future explorations</p>
+<ul>
+<li class="fragment">R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree</li>
+<li class="fragment">heterogenous distance functions</li>
+<li class="fragment">distributed spark impl</li>
+<li class="fragment">run k-means against all the coordinates on in the R-Tree, show the result on the map, utilize the R-Tree to look up associated data with that coordinate</li>
+<li class="fragment">specialization and/or miniboxing</li>
+<li class="fragment">turn it into a usable and efficient library</li>
+<li class="fragment">visualization with d3, perhaps leverage archery and scala-js</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<p>Thanks!</p>
+<p>repo : <a href="https://github.com/drostron/rtree-explorations">rtree-explorations</a></p>
+<p><img src="resources/shapeless-such-future-so-bright.jpg" style="width: 55%; margin-top: 1em"></p>
+</section>
+    </div>
+  </div>
+
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: false,
+        progress: true,
+        history: true,
+        width: 1024,
+        height: 768,
+        center: false,
+        theme: 'serif', // available themes are in /css/theme
+        transition: 'fade', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+//          { src: 'reveal.js/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; }, }
+//          { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+]});
+    </script>
+    </body>
+</html>
