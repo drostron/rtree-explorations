@@ -1,5 +1,5 @@
 #!/bin/sh
 
-# works nicely in conjunction with http://tin.cr
+# works nicely in conjunction with https://github.com/MikeRogers0/LivePage
 
-ls rtree-spark-talk.md Makefile style.html | entr make
+ls ../target/scala-2.11/tut/slides.md Makefile style.html | entr make

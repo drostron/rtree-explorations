@@ -1,4 +1,4 @@
-SOURCE = rtree-spark-talk.md
+SOURCE = ../target/scala-2.11/tut/slides.md
 
 all: reveal
 
@@ -6,9 +6,10 @@ clean:
 	rm -f index.html
 
 # themes      : default, beige, sky, night, serif, simple, solarized
-# transitions : default, linear, cube
+# transitions : default, none, fade, slide, convex, concave, zoom
 
 reveal: $(SOURCE) $(STYLE)
-	pandoc -f markdown -i --smart -t revealjs -V theme=serif -V transition=linear -V controls=false \
-		--template=pandoc-templates/default.revealjs --include-in-header=style.html \
+	pandoc -f markdown+escaped_line_breaks -i --smart -t revealjs -V theme=serif -V transition=fade -V controls=false \
+		--template=pandoc-templates/default.revealjs \
+		--include-in-header=style.html --highlight-style=zenburn \
 		-s $(SOURCE) -o index.html

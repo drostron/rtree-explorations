@@ -1,4 +1,3 @@
-import net.ceedubs.sbtctags.CtagsKeys.genCtags
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.11.5",
@@ -34,8 +33,6 @@ lazy val commonSettings = Seq(
 lazy val rootSettings = Seq(
   testOptions in Test += Tests.Argument("-verbosity", "1"),
 
-  // (compile in Compile) <<= (compile in Compile) dependsOn genCtags,
-
   libraryDependencies ++= Seq(
     "com.chuusai" %% "shapeless" % "2.1.0",
     "org.scalaz" %% "scalaz-core" % "7.1.1",
@@ -47,6 +44,7 @@ lazy val root = Project("ndim-rtree-exploration", file("."))
   .settings(commonSettings:_*)
   .settings(rootSettings:_*)
   .settings(tutSettings:_*)
+  .settings(tutSourceDirectory := file("slides/tut"))
 
 lazy val benchmarkSettings = Seq(
   fork in run := true,

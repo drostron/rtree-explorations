@@ -2,32 +2,28 @@
 ### recent thoughts
 
 - think of questions that folks will ask
-
-### ideas to add to slides
-
-- include inspiration of this exploration via reading Designing Data Intensive applications?
-  - could plug it then tweet to the mention?
-- how to attribute images from wikipedia? footnotes?
-- how to create diagrams?
-- visualization for a 2d version on a map
-- future ideas slide with some of the below
-- show Tree, B-Tree for a 1 dimensional index as motivation, now we want a multiple dimension index, what to do?, R-Tree to the rescue
-    - good for spatial and applicable to any product of Ordered[T]
-- references and look at: archery, ...
-- Typeclass with necessary ops
+- add '~; tut; sh make -C slides' somewhere with reference to LivePage, keep entr-make.sh around?
+- remove 2 dim version once example code is in slides?
+- switch to spire's Interval and Point?
+- kind projector
+- define laws and utilize discipline
+- explore the following as listed out in the cats project
+    - simulacrum for minimizing typeclass boilerplate
+    - machinist for optimizing implicit operators
+    - discipline for encoding and testing laws
+    - kind-projector for type lambda syntax
+    - algebra for shared algebraic structures
+    ...and of course a pure functional subset of the Scala language. (_http://i.imgur.com/a04WoHn.png_?)
 
 ### before presentation
 
-- create the rtree exploration repo
-- host slides on gh-pages for the exploration repo
-- clean git history?
+- merge topic/presentation-prep to master and publish to slides gh-pages
 - would be nice to run through with a few folks next week
 
 ### ideas, todos, notes
 
 - look further at archery and various R-Tree implementations
     - review https://github.com/meetup/archery and R-Tree variants, e.g. http://en.wikipedia.org/wiki/M-tree
-- look for benchmarks and tooling to run benchmarks
 - continue with spark impl post 1st preso
 - direct further work based on feedback
 - spark impl
