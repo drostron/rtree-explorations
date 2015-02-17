@@ -452,7 +452,7 @@ fun things explored
 > - [scalacheck](https://github.com/rickynils/scalacheck) : Property-based testing for Scala
 > - [scalacheck-shapeless](https://github.com/alexarchambault/scalacheck-shapeless) : Generation of arbitrary case classes / ADTs with scalacheck and shapeless
 > - [archery](https://github.com/meetup/archery) : 2D R-Tree implementation in Scala
->    - leveraged for scalacheck tests and benchmarking
+>     - leveraged for scalacheck tests and benchmarking
 > - [thyme](https://github.com/Ichoran/thyme) -  microbenchmark utility for Scala
 > - [scalaz](https://github.com/scalaz/scalaz) - An extension to the core Scala library for functional programming
 >     - utilized mostly for type-safe equality (_looking forward to spending more time with [cats](https://github.com/non/cats)_)
