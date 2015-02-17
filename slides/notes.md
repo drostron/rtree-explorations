@@ -1,12 +1,8 @@
 
 ### recent thoughts
 
-- think of questions that folks will ask
 - add '~; tut; sh make -C slides' somewhere with reference to LivePage, keep entr-make.sh around?
-- remove 2 dim version once example code is in slides?
 - switch to spire's Interval and Point?
-- kind projector
-- define laws and utilize discipline
 - explore the following as listed out in the cats project
     - simulacrum for minimizing typeclass boilerplate
     - machinist for optimizing implicit operators
@@ -14,11 +10,6 @@
     - kind-projector for type lambda syntax
     - algebra for shared algebraic structures
     ...and of course a pure functional subset of the Scala language. (_http://i.imgur.com/a04WoHn.png_?)
-
-### before presentation
-
-- merge topic/presentation-prep to master and publish to slides gh-pages
-- would be nice to run through with a few folks next week
 
 ### ideas, todos, notes
 

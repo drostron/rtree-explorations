@@ -28,12 +28,6 @@ object NDimRTreeTest extends Properties("NDimRTree") {
     r.add(e).find(e.point) === e.some
   }
 
-  // unable to use scalaz-scalacheck-binding's NonEmptyList Arbitrary instance due to a binary incompatibility,
-  // its scalacheck 1.11.4 dep is evicted by scalacheck-shapeless's scalacheck 1.12.1 dep
-
-  // TODO : create a generator of list where size is > 1
-  // looking like a Arbitrary RTree generator would be helpful
-
   property("build from list of entries") = forAll { entries: List[Entry[V, N]] =>
     RTree(entries).entries.toSet === entries.toSet
   }
@@ -117,7 +111,7 @@ object NDimRTreeTest extends Properties("NDimRTree") {
 
   // TODO : property("rtree.searchIntersection works")
 
-  property("rtree.nearest works") = forAll { (es: List[Entry[V, N]], p: Point[N]) =>
+  // property("rtree.nearest works") = forAll { (es: List[Entry[V, N]], p: Point[N]) =>
     // val rt = RTree(es)
     //
     // if (es.isEmpty) {
@@ -132,18 +126,18 @@ object NDimRTreeTest extends Properties("NDimRTree") {
     //   println(s"rt.nearest(p) : ${rt.nearest(p)}")
     //   require(rt.nearest(p).map(_.point.distance(p)) === Some(d))
     // }
-    true
-  }
+    // true
+  // }
 
-  property("rtree.nearestK works") = forAll { (es: List[Entry[V, N]], p: Point[N], k0: Int) =>
+  // property("rtree.nearestK works") = forAll { (es: List[Entry[V, N]], p: Point[N], k0: Int) =>
     // val k = (k0 % 1000).abs
     // val rt = build(es)
     //
     // val as = es.map(_.geom.distance(p)).sorted.take(k).toVector
     // val bs = rt.nearestK(p, k).map(_.geom.distance(p))
     // as shouldBe bs
-    true
-  }
+    // true
+  // }
 
   sealed trait Action {
     def test(rt: RTree[V, N]): RTree[V, N]

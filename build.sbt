@@ -34,11 +34,11 @@ lazy val rootSettings = Seq(
   testOptions in Test += Tests.Argument("-verbosity", "1"),
 
   libraryDependencies ++= Seq(
-    "com.chuusai" %% "shapeless" % "2.1.0",
+    "com.chuusai" %% "shapeless" % "2.1.0-RC1",
     "org.scalaz" %% "scalaz-core" % "7.1.1",
     "org.spire-math" %% "spire" % "0.9.1",
-    "org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
-    "com.github.alexarchambault" %% "scalacheck-shapeless" % "1.12.1" % "test"))
+    "org.scalacheck" %% "scalacheck" % "1.12.2",
+    "com.github.alexarchambault" %% "scalacheck-shapeless" % "1.12.1"))
 
 lazy val root = Project("ndim-rtree-exploration", file("."))
   .settings(commonSettings:_*)

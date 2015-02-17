@@ -15,13 +15,11 @@ Feb 17, 2015
 
 ---
 
-## opening notes and such
+## opening notes
 
-- presentation plan? perhaps depends on how long this gets
-- warning: this is not complete
-- just a place for exploration
-- more of a chance to dig into shapeless than look in depth at R-Trees
-- help me if you know someting that I left out or could improve on, no claims of expertise, just having some fun, join me
+- this is not complete
+- more of a chance to dig into shapeless than look in depth at R-Trees (_at least initially_)
+- just having some fun, please join me
 
 ---
 
@@ -85,7 +83,7 @@ object data2D extends Data2D
 ---
 
 ```tut
-import data2D._, spire._, algebra._, math.{ min, max }, implicits._
+import data2D._, spire._, algebra._
 
 trait Ops2D {
   def initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
@@ -107,44 +105,6 @@ trait Ops2D {
   def contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean
 
   def search[V, T](space: Box[T]): List[Entry[V, T]]
-}
-```
-
----
-
-types might be sufficient for this part of the story and save impl for HList version?
-
-```tut
-object ops2D extends Ops2D {
-  def initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T] = Box(
-    min(point1.x, point2.x), max(point1.x, point2.x),
-    min(point1.y, point2.y), max(point1.y, point2.y))
-
-  def expandBox[T : Order](box: Box[T], point: Point[T]): Box[T] = Box(
-    min(box.xLower, point.x), max(box.xUpper, point.x),
-    min(box.yLower, point.y), max(box.yUpper, point.y))
-
-  def expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T] = Box(
-    min(box1.xLower, box2.xLower), max(box1.xUpper, box2.xUpper),
-    min(box1.yLower, box2.yLower), max(box1.yUpper, box2.yUpper))
-
-  def withinBox[T : Order](box: Box[T], point: Point[T]): Boolean =
-    box.xLower <= point.x && point.x <= box.xUpper &&
-    box.yLower <= point.y && point.y <= box.yUpper
-
-  def overlaps[T : Order](box1: Box[T], box2: Box[T]): Boolean =
-    box1.xLower <= box2.xUpper && box1.xUpper >= box2.xLower &&
-    box1.yLower <= box2.yUpper && box1.yUpper >= box2.yLower
-
-  def add[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T] = ???
-
-  def remove[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T] = ???
-
-  def find[V, T](rtree: RTree[V, T], point: Point[T]): Option[Entry[V, T]] = ???
-
-  def contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean = ???
-
-  def search[V, T](space: Box[T]): List[Entry[V, T]] = ???
 }
 ```
 
@@ -275,7 +235,7 @@ note: intentionally postponed a few items
 ---
 
 ```tut
-import dataHListNDim._, shapeless.ops.hlist._
+import dataHListNDim._, shapeless.ops.hlist._, spire.math.{ min, max }, spire.implicits.{eqOps => _, _}
 
 trait OpsHListFunctions {
   object minimum extends Poly2 {
@@ -413,28 +373,79 @@ val t1: RTree[String, Int :: Long :: HNil] = RTree(List(Entry("z", Point(3 :: 1.
 
 ---
 
-_a few more examples here_
+how bout some property based tests
+
+```tut
+import NDimRTreeOps._, org.scalacheck._, Arbitrary._, Prop._, Shapeless._
+import scalaz.{ Ordering => _, _ }, Scalaz._, shapeless.{ :: => :×: }
+
+class NDimRTreeTest extends Properties("NDimRTree") {
+  type V = String
+  type N = Int :×: Double :×: String :×: HNil
+
+  implicit def setEqual[T] = Equal.equalA[Set[T]]
+
+  property("insert entry") = forAll { (r: RTree[V, N], e: Entry[V, N]) =>
+    r.add(e).find(e.point) === e.some
+  }
+
+  property("build from list of entries") = forAll { entries: List[Entry[V, N]] =>
+    RTree(entries).entries.toSet === entries.toSet
+  }
+
+  property("rtree.contains works") = forAll { (es: List[Entry[V, N]], e: Entry[V, N]) =>
+    val rt = RTree(es)
+
+    es.forall(rt.contains) && (rt.contains(e) === es.contains(e))
+  }
+}
+```
 
 ---
 
-_show a scalacheck example_
+```tut
+object nDimRTreeTest extends NDimRTreeTest {
 
-_show results_
+  property("rtree.search agrees with withinBox(box, point) filtering") = forAll {
+    (es: List[Entry[V, N]], p1: Point[N], p2: Point[N]) =>
+
+    val rt = RTree(es)
+
+    val box1 = initBox(p1, p2)
+    require(rt.search(box1).toSet === es.filter(e => withinBox(box1, e.point)).toSet)
+
+    es.foreach { e =>
+      val box2 = initBox(e.point, p2)
+      require(rt.search(box2).toSet === es.filter(e => withinBox(box2, e.point)).toSet)
+    }
+    true
+  }
+}
+```
+
+. . .
+
+```tut
+nDimRTreeTest.check
+```
+
+---
+
+initial benchmarking:
+
+plenty of room for improvement. just a first naive pass. confident that reasonable performance is achievable.
 
 ---
 
 fun things explored
 
-- rtrees (but you already know that)
+- generic programming with shapeless
 - indexes
-- typelevel generic programming
-    - hlists, map, zip, etc operations over hlists
+- R-Trees (but you already know that)
 
 ---
 
  libraries utilized
-
-_add brief description of how each was utilized_
 
 > - [shapeless](https://github.com/milessabin/shapeless) : Generic programming for Scala
 > - [spire](https://github.com/non/spire) : Powerful new number types and numeric abstractions for Scala
@@ -444,33 +455,20 @@ _add brief description of how each was utilized_
 >    - leveraged for scalacheck tests and benchmarking
 > - [thyme](https://github.com/Ichoran/thyme) -  microbenchmark utility for Scala
 > - [scalaz](https://github.com/scalaz/scalaz) - An extension to the core Scala library for functional programming
->     - utilized mostly for type-safe equality (_looking forward to cats_)
+>     - utilized mostly for type-safe equality (_looking forward to spending more time with [cats](https://github.com/non/cats)_)
 > - [tut](https://github.com/tpolecat/tut) - doc/tutorial generator for scala
->     - sending the code you've been looking at to scalac
-
----
-
-initial performance comparisons tests:
-
-plenty of room for improvement. just a first naive pass at the moment. if interested let's hack together.
-
----
-
-caveats:
-
-don't use this in production or if you think it is useful let's crisp up the implementation together
+>     - sent the code used in this presentation to scalac
 
 ---
 
 future explorations
 
-- R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree
 - heterogenous distance functions
-- distributed spark impl
-- run k-means against all the coordinates on in the R-Tree, show the result on the map, utilize the R-Tree to look up associated data with that coordinate
 - specialization and/or miniboxing
-- turn it into a usable and efficient library
 - visualization with d3, perhaps leverage archery and scala-js
+- turn this exploration into a usable and efficient library
+- R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree
+- distributed implementation
 
 ---
 

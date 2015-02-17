@@ -100,13 +100,11 @@ code > span.er { color: #c3bf9f; }
 </section>
 <section class="slide level1">
 
-<h2 id="opening-notes-and-such">opening notes and such</h2>
+<h2 id="opening-notes">opening notes</h2>
 <ul>
-<li class="fragment">presentation plan? perhaps depends on how long this gets</li>
-<li class="fragment">warning: this is not complete</li>
-<li class="fragment">just a place for exploration</li>
-<li class="fragment">more of a chance to dig into shapeless than look in depth at R-Trees</li>
-<li class="fragment">help me if you know someting that I left out or could improve on, no claims of expertise, just having some fun, join me</li>
+<li class="fragment">this is not complete</li>
+<li class="fragment">more of a chance to dig into shapeless than look in depth at R-Trees (<em>at least initially</em>)</li>
+<li class="fragment">just having some fun, please join me</li>
 </ul>
 </section>
 <section class="slide level1">
@@ -166,12 +164,10 @@ defined <span class="kw">object</span> data2D</code></pre>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> data2D.<span class="fu">_</span>, spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>, math.{ min, max }, implicits.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> data2D.<span class="fu">_</span>, spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>
 <span class="kw">import</span> data2D.<span class="fu">_</span>
 <span class="kw">import</span> spire.<span class="fu">_</span>
 <span class="kw">import</span> algebra.<span class="fu">_</span>
-<span class="kw">import</span> math.{min, max}
-<span class="kw">import</span> implicits.<span class="fu">_</span>
 
 scala&gt; <span class="kw">trait</span> Ops2D {
      |   <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
@@ -186,33 +182,6 @@ scala&gt; <span class="kw">trait</span> Ops2D {
      |   <span class="kw">def</span> search[V, T](space: Box[T]): List[Entry[V, T]]
      | }
 defined <span class="kw">trait</span> Ops2D</code></pre>
-</section>
-<section class="slide level1">
-
-<p>types might be sufficient for this part of the story and save impl for HList version?</p>
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">object</span> ops2D <span class="kw">extends</span> Ops2D {
-     |   <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T] = Box(
-     |     <span class="fu">min</span>(point1.<span class="fu">x</span>, point2.<span class="fu">x</span>), <span class="fu">max</span>(point1.<span class="fu">x</span>, point2.<span class="fu">x</span>),
-     |     <span class="fu">min</span>(point1.<span class="fu">y</span>, point2.<span class="fu">y</span>), <span class="fu">max</span>(point1.<span class="fu">y</span>, point2.<span class="fu">y</span>))
-     |   <span class="kw">def</span> expandBox[T : Order](box: Box[T], point: Point[T]): Box[T] = Box(
-     |     <span class="fu">min</span>(box.<span class="fu">xLower</span>, point.<span class="fu">x</span>), <span class="fu">max</span>(box.<span class="fu">xUpper</span>, point.<span class="fu">x</span>),
-     |     <span class="fu">min</span>(box.<span class="fu">yLower</span>, point.<span class="fu">y</span>), <span class="fu">max</span>(box.<span class="fu">yUpper</span>, point.<span class="fu">y</span>))
-     |   <span class="kw">def</span> expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T] = Box(
-     |     <span class="fu">min</span>(box1.<span class="fu">xLower</span>, box2.<span class="fu">xLower</span>), <span class="fu">max</span>(box1.<span class="fu">xUpper</span>, box2.<span class="fu">xUpper</span>),
-     |     <span class="fu">min</span>(box1.<span class="fu">yLower</span>, box2.<span class="fu">yLower</span>), <span class="fu">max</span>(box1.<span class="fu">yUpper</span>, box2.<span class="fu">yUpper</span>))
-     |   <span class="kw">def</span> withinBox[T : Order](box: Box[T], point: Point[T]): Boolean =
-     |     box.<span class="fu">xLower</span> &lt;= point.<span class="fu">x</span> &amp;&amp; point.<span class="fu">x</span> &lt;= box.<span class="fu">xUpper</span> &amp;&amp;
-     |     box.<span class="fu">yLower</span> &lt;= point.<span class="fu">y</span> &amp;&amp; point.<span class="fu">y</span> &lt;= box.<span class="fu">yUpper</span>
-     |   <span class="kw">def</span> overlaps[T : Order](box1: Box[T], box2: Box[T]): Boolean =
-     |     box1.<span class="fu">xLower</span> &lt;= box2.<span class="fu">xUpper</span> &amp;&amp; box1.<span class="fu">xUpper</span> &gt;= box2.<span class="fu">xLower</span> &amp;&amp;
-     |     box1.<span class="fu">yLower</span> &lt;= box2.<span class="fu">yUpper</span> &amp;&amp; box1.<span class="fu">yUpper</span> &gt;= box2.<span class="fu">yLower</span>
-     |   <span class="kw">def</span> add[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T] = ???
-     |   <span class="kw">def</span> remove[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T] = ???
-     |   <span class="kw">def</span> find[V, T](rtree: RTree[V, T], point: Point[T]): Option[Entry[V, T]] = ???
-     |   <span class="kw">def</span> contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean = ???
-     |   <span class="kw">def</span> search[V, T](space: Box[T]): List[Entry[V, T]] = ???
-     | }
-defined <span class="kw">object</span> ops2D</code></pre>
 </section>
 <section class="slide level1">
 
@@ -329,9 +298,11 @@ defined <span class="kw">object</span> dataHListNDim</code></pre>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>, spire.<span class="fu">math</span>.{ min, max }, spire.<span class="fu">implicits</span>.{eqOps =&gt; _, _}
 <span class="kw">import</span> dataHListNDim.<span class="fu">_</span>
 <span class="kw">import</span> shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>
+<span class="kw">import</span> spire.<span class="fu">math</span>.{min, max}
+<span class="kw">import</span> spire.<span class="fu">implicits</span>.{eqOps=&gt;_, _}
 
 scala&gt; <span class="kw">trait</span> OpsHListFunctions {
      |   <span class="kw">object</span> minimum <span class="kw">extends</span> Poly2 {
@@ -453,29 +424,78 @@ scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</
 </section>
 <section class="slide level1">
 
-<p><em>a few more examples here</em></p>
+<p>how bout some property based tests</p>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> NDimRTreeOps.<span class="fu">_</span>, org.<span class="fu">scalacheck</span>.<span class="fu">_</span>, Arbitrary.<span class="fu">_</span>, Prop.<span class="fu">_</span>, Shapeless.<span class="fu">_</span>
+<span class="kw">import</span> NDimRTreeOps.<span class="fu">_</span>
+<span class="kw">import</span> org.<span class="fu">scalacheck</span>.<span class="fu">_</span>
+<span class="kw">import</span> Arbitrary.<span class="fu">_</span>
+<span class="kw">import</span> Prop.<span class="fu">_</span>
+<span class="kw">import</span> Shapeless.<span class="fu">_</span>
+
+scala&gt; <span class="kw">import</span> scalaz.{ Ordering =&gt; _, _ }, Scalaz.<span class="fu">_</span>, shapeless.{ :: =&gt; :×: }
+<span class="kw">import</span> scalaz.{Ordering=&gt;_, _}
+<span class="kw">import</span> Scalaz.<span class="fu">_</span>
+<span class="kw">import</span> shapeless.{$colon$colon=&gt;$colon$u00D7$colon}
+
+scala&gt; <span class="kw">class</span> NDimRTreeTest <span class="kw">extends</span> Properties(<span class="st">&quot;NDimRTree&quot;</span>) {
+     |   <span class="kw">type</span> V = String
+     |   <span class="kw">type</span> N = Int :×: Double :×: String :×: HNil
+     |   <span class="kw">implicit</span> <span class="kw">def</span> setEqual[T] = Equal.<span class="fu">equalA</span>[Set[T]]
+     |   <span class="fu">property</span>(<span class="st">&quot;insert entry&quot;</span>) = forAll { (r: RTree[V, N], e: Entry[V, N]) =&gt;
+     |     r.<span class="fu">add</span>(e).<span class="fu">find</span>(e.<span class="fu">point</span>) === e.<span class="fu">some</span>
+     |   }
+     |   <span class="fu">property</span>(<span class="st">&quot;build from list of entries&quot;</span>) = forAll { entries: List[Entry[V, N]] =&gt;
+     |     <span class="fu">RTree</span>(entries).<span class="fu">entries</span>.<span class="fu">toSet</span> === entries.<span class="fu">toSet</span>
+     |   }
+     |   <span class="fu">property</span>(<span class="st">&quot;rtree.contains works&quot;</span>) = forAll { (es: List[Entry[V, N]], e: Entry[V, N]) =&gt;
+     |     <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
+     |     es.<span class="fu">forall</span>(rt.<span class="fu">contains</span>) &amp;&amp; (rt.<span class="fu">contains</span>(e) === es.<span class="fu">contains</span>(e))
+     |   }
+     | }
+defined <span class="kw">class</span> NDimRTreeTest</code></pre>
 </section>
 <section class="slide level1">
 
-<p><em>show a scalacheck example</em></p>
-<p><em>show results</em></p>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">object</span> nDimRTreeTest <span class="kw">extends</span> NDimRTreeTest {
+     |   <span class="fu">property</span>(<span class="st">&quot;rtree.search agrees with withinBox(box, point) filtering&quot;</span>) = forAll {
+     |     (es: List[Entry[V, N]], p1: Point[N], p2: Point[N]) =&gt;
+     |     <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
+     |     <span class="kw">val</span> box1 = <span class="fu">initBox</span>(p1, p2)
+     |     <span class="fu">require</span>(rt.<span class="fu">search</span>(box1).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box1, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
+     |     es.<span class="fu">foreach</span> { e =&gt;
+     |       <span class="kw">val</span> box2 = <span class="fu">initBox</span>(e.<span class="fu">point</span>, p2)
+     |       <span class="fu">require</span>(rt.<span class="fu">search</span>(box2).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box2, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
+     |     }
+     |     <span class="kw">true</span>
+     |   }
+     | }
+defined <span class="kw">object</span> nDimRTreeTest</code></pre>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; nDimRTreeTest.<span class="fu">check</span>
++ NDimRTree.<span class="fu">insert</span> entry: OK, passed <span class="dv">100</span> tests.
++ NDimRTree.<span class="fu">build</span> from list of entries: OK, passed <span class="dv">100</span> tests.
++ NDimRTree.<span class="fu">rtree</span>.<span class="fu">contains</span> works: OK, passed <span class="dv">100</span> tests.
++ NDimRTree.<span class="fu">rtree</span>.<span class="fu">search</span> agrees <span class="kw">with</span> <span class="fu">withinBox</span>(box, point) filtering: OK, p
+  assed <span class="dv">100</span> tests.</code></pre>
+</div>
+</section>
+<section class="slide level1">
+
+<p>initial benchmarking:</p>
+<p>plenty of room for improvement. just a first naive pass. confident that reasonable performance is achievable.</p>
 </section>
 <section class="slide level1">
 
 <p>fun things explored</p>
 <ul>
-<li class="fragment">rtrees (but you already know that)</li>
+<li class="fragment">generic programming with shapeless</li>
 <li class="fragment">indexes</li>
-<li class="fragment">typelevel generic programming
-<ul>
-<li class="fragment">hlists, map, zip, etc operations over hlists</li>
-</ul></li>
+<li class="fragment">R-Trees (but you already know that)</li>
 </ul>
 </section>
 <section class="slide level1">
 
 <p>libraries utilized</p>
-<p><em>add brief description of how each was utilized</em></p>
 <ul>
 <li><a href="https://github.com/milessabin/shapeless">shapeless</a> : Generic programming for Scala</li>
 <li><a href="https://github.com/non/spire">spire</a> : Powerful new number types and numeric abstractions for Scala</li>
@@ -486,35 +506,24 @@ scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</
 <li><a href="https://github.com/Ichoran/thyme">thyme</a> - microbenchmark utility for Scala</li>
 <li><a href="https://github.com/scalaz/scalaz">scalaz</a> - An extension to the core Scala library for functional programming
 <ul>
-<li>utilized mostly for type-safe equality (<em>looking forward to cats</em>)</li>
+<li>utilized mostly for type-safe equality (<em>looking forward to spending more time with <a href="https://github.com/non/cats">cats</a></em>)</li>
 </ul></li>
 <li><a href="https://github.com/tpolecat/tut">tut</a> - doc/tutorial generator for scala
 <ul>
-<li>sending the code you’ve been looking at to scalac</li>
+<li>sent the code used in this presentation to scalac</li>
 </ul></li>
 </ul>
 </section>
 <section class="slide level1">
 
-<p>initial performance comparisons tests:</p>
-<p>plenty of room for improvement. just a first naive pass at the moment. if interested let’s hack together.</p>
-</section>
-<section class="slide level1">
-
-<p>caveats:</p>
-<p>don’t use this in production or if you think it is useful let’s crisp up the implementation together</p>
-</section>
-<section class="slide level1">
-
 <p>future explorations</p>
 <ul>
-<li class="fragment">R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree</li>
 <li class="fragment">heterogenous distance functions</li>
-<li class="fragment">distributed spark impl</li>
-<li class="fragment">run k-means against all the coordinates on in the R-Tree, show the result on the map, utilize the R-Tree to look up associated data with that coordinate</li>
 <li class="fragment">specialization and/or miniboxing</li>
-<li class="fragment">turn it into a usable and efficient library</li>
 <li class="fragment">visualization with d3, perhaps leverage archery and scala-js</li>
+<li class="fragment">turn this exploration into a usable and efficient library</li>
+<li class="fragment">R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree</li>
+<li class="fragment">distributed implementation</li>
 </ul>
 </section>
 <section class="slide level1">
