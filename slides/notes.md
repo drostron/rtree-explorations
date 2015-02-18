@@ -9,10 +9,21 @@
     - discipline for encoding and testing laws
     - kind-projector for type lambda syntax
     - algebra for shared algebraic structures
-    ...and of course a pure functional subset of the Scala language. (_http://i.imgur.com/a04WoHn.png_?)
+    - ...and of course a pure functional subset of the Scala language. (_http://i.imgur.com/a04WoHn.png_?)
 
 ### ideas, todos, notes
 
+- compare scalameter to Thyme. Archery uses Thyme.
+- up the number of checked warts
+- address imports so there is a more singular import available
+- spire imports are required, hmm, wonder if there's a more intuitive way to include those transitively
+- RTree's V, value type, could be a shapeless Coproduct?
+- would be fun to see what algebraic laws apply to R-Trees
+    - https://github.com/non/algebra#algebraic-properties-and-terminology
+- make sure to say I welcome suggestions comments feedback...
+- leverage propensive's heteroargs.scala gist to add sugar over the various HList parameter constructors
+- could just use spire's Intervals and Interval.point?, anything for box?
+- look into typelevel/discipline for law checking
 - look further at archery and various R-Tree implementations
     - review https://github.com/meetup/archery and R-Tree variants, e.g. http://en.wikipedia.org/wiki/M-tree
 - continue with spark impl post 1st preso
