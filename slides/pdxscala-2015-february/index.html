@@ -400,6 +400,9 @@ b1: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class
 scala&gt; <span class="kw">val</span> b2 = <span class="fu">initBox</span>(Point(<span class="dv">2</span> :: HNil), Point(<span class="dv">4</span> :: HNil))
 b2: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">2</span> :: HNil,<span class="dv">4</span> :: HNil)
 
+scala&gt; <span class="kw">val</span> b3 = <span class="fu">initBox</span>(Point(<span class="st">&quot;a&quot;</span> :: HNil), Point(<span class="st">&quot;z&quot;</span> :: HNil))
+b3: ndimrtree.<span class="fu">Box</span>[shapeless.::[String,shapeless.<span class="fu">HNil</span>]] = Box(a :: HNil,z :: HNil)
+
 scala&gt; <span class="kw">import</span> shapeless.<span class="fu">test</span>.<span class="fu">_</span>
 <span class="kw">import</span> shapeless.<span class="fu">test</span>.<span class="fu">_</span>
 
