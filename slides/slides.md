@@ -344,6 +344,8 @@ val b1 = initBox(Point(1 :: HNil), Point(3 :: HNil))
 
 val b2 = initBox(Point(2 :: HNil), Point(4 :: HNil))
 
+val b3 = initBox(Point("a" :: HNil), Point("z" :: HNil))
+
 import shapeless.test._
 
 illTyped("""
