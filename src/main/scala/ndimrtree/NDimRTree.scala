@@ -17,7 +17,7 @@ case class Node[V, T <: HList](box: Box[T], left: RTree[V, T], right: RTree[V, T
 object RTree {
   def apply
     [V, T <: HList : ZWMin : ZWMax, L <: HList : ZWLB[T]#λ : LFA, U <: HList : ZWUB[T]#λ : LFA]
-    (entries: List[Entry[V, T]])
+    (entries: Seq[Entry[V, T]])
     : RTree[V, T] =
     entries.foldLeft[RTree[V, T]](Empty[V, T]())(_ add _)
 }

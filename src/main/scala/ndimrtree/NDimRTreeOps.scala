@@ -2,12 +2,11 @@ package ndimrtree
 
 import scalaz._, Scalaz._
 import shapeless._
+import spire.math._
 import NDimRTree._, NDimRTreeOps._
 
 // TODO : crisp up, not quite ideal yet,
 // should ops be monomorphic on rtree or have polymorphic dispatch like it is currently
-
-// TODO : should Lists be Seqs?
 
 object NDimRTreeOps {
   implicit def toLeafOps
@@ -102,14 +101,15 @@ class NDimRTreeOps
 
   def contains(entry: Entry[V, T]): Boolean = find(entry.point).isDefined
 
-  def search(space: Box[T]): List[Entry[V, T]] =
+  def search(space: Box[T]): Vector[Entry[V, T]] = search(space, _ => true)
+
+  def search(space: Box[T], f: Entry[V, T] => Boolean): Vector[Entry[V, T]] =
     rtree match {
-    case leaf: Leaf[V, T] if withinBox(space, leaf.entry.point) =>
-      List(leaf.entry)
+    case leaf: Leaf[V, T] if withinBox(space, leaf.entry.point) && f(leaf.entry) =>
+      Vector(leaf.entry)
     case node: Node[V, T] if overlaps(space, node.box) =>
-      node.left.search(space) ::: node.right.search(space)
-    case _ =>
-      Nil
+      node.left.search(space) ++ node.right.search(space)
+    case _ => Vector.empty
     }
 
   // TODO : incorrect
@@ -121,16 +121,18 @@ class NDimRTreeOps
     case node: Node[V, T] => node.left.find(point).orElse(node.right.find(point))
     }
 
-  lazy val entries: List[Entry[V, T]] =
+  def count(space: Box[T]): Int = search(space).size
+
+  lazy val entries: Vector[Entry[V, T]] =
     rtree match {
-    case _: Empty[_, _] => Nil
-    case Leaf(entry) => List(entry)
-    case Node(_, left, right) => left.entries ::: right.entries
+    case _: Empty[_, _] => Vector.empty
+    case Leaf(entry) => Vector(entry)
+    case Node(_, left, right) => left.entries ++ right.entries
     }
 
-  lazy val pretty: String = pretty()
+  lazy val pretty: String = pretty(0)
 
-  def pretty(indent: Int = 0): String = {
+  def pretty(indent: Int): String = {
     def i = " "*indent
     rtree match {
     case e: Empty[V, T] => s"$i$e"
@@ -140,6 +142,16 @@ class NDimRTreeOps
       s"${i}Node(\n$i  $box,\n${left.pretty(indent + 2)},\n${right.pretty(indent + 2)}"
     }
   }
+
+  lazy val leafDepths: Vector[Number] = leafDepths(0)
+
+  def leafDepths(depth: Number): Vector[Number] =
+    rtree match {
+    case _: Empty[V, T] => Vector.empty
+    case l: Leaf[V, T] => Vector(depth)
+    case Node(box, left, right) =>
+      left.leafDepths(depth + 1) ++ right.leafDepths(depth + 1)
+    }
 
 }
 

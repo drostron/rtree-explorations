@@ -2,12 +2,9 @@ package ndimrtree
 
 // building towards parity with the archery benchmark
 
-// TODO : bring in archery as a dependency and compare
-
 import ichi.bench.Thyme
 import NDimRTreeOps._
 import scala.util.Random.nextGaussian
-import scalaz._
 import shapeless._
 import spire._, implicits._
 
@@ -19,7 +16,7 @@ object Main {
   val xmax, ymax = 5000F
   val dx, dy = 10000F
   // val size = 1000000
-  val size = 1000
+  val size = 50000
   val num = 1000
   val radius = 10
 
@@ -72,7 +69,7 @@ object Main {
 
     println(s"\nndimrtree: building tree from $size entries")
     val nrt = th.pbench {
-      RTree(NonEmptyList(entries.head, entries.tail: _*))
+      RTree(entries)
     }
 
     println(s"\narchery: doing $num random searches (radius: $radius)")
@@ -87,7 +84,51 @@ object Main {
     }
     println(s"  found $nn1 results")
 
+    println(s"\narchery: doing $num random searches with filter (radius: $radius)")
+    val anx = th.pbench {
+      archerySeeds.boxes.foldLeft(0)((n, b) => n + art.search(b, _ => true).length)
+    }
+    println(s"found $anx results")
 
+    println(s"\nndimrtree: doing $num random searches with filter (radius: $radius)")
+    val nnx = th.pbench {
+      boxes.foldLeft(0)((n, b) => n + nrt.search(b, _ => true).length)
+    }
+    println(s"found $nnx results")
+
+    println(s"\narchery: doing $num counts")
+    val an2 = th.pbench {
+      archerySeeds.boxes.foldLeft(0)((n, b) => n + art.count(b))
+    }
+    println(s"found $an2 results")
+
+    println(s"\nndimrtree: doing $num counts")
+    val nn2 = th.pbench {
+      boxes.foldLeft(0)((n, b) => n + nrt.count(b))
+    }
+    println(s"found $nn2 results")
+
+    println(s"\narchery: removing $num entries")
+    th.pbench {
+      archerySeeds.entries.take(num).foldLeft(art)(_ remove _)
+    }
+
+    println(s"\nndimrtree: removing $num entries")
+    th.pbench {
+      entries.take(num).foldLeft(nrt)(_ remove _)
+    }
+
+    println(s"\narchery: inserting $num entries")
+    th.pbench {
+      archerySeeds.extra.foldLeft(art)(_ insert _)
+    }
+
+    println(s"\nndimrtree: inserting $num entries")
+    th.pbench {
+      extra.foldLeft(nrt)(_ add _)
+    }
+
+    ()
   }
 
 }
