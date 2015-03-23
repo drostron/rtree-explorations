@@ -12,4 +12,5 @@ reveal: $(SOURCE) $(STYLE)
 	pandoc -f markdown+escaped_line_breaks -i --smart -t revealjs -V theme=serif -V transition=fade -V controls=false \
 		--template=pandoc-templates/default.revealjs \
 		--include-in-header=style.html --highlight-style=zenburn \
+		--include-after-body=after-body.html \
 		-s $(SOURCE) -o index.html
