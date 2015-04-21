@@ -145,60 +145,53 @@ code > span.er { color: #c3bf9f; }
 
 <p>how bout some code</p>
 <div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> Data2D {
-     |   <span class="kw">case</span> <span class="kw">class</span> Point[T](x: T, y: T)
-     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
-     |   <span class="kw">case</span> <span class="kw">class</span> Box[T](xLower: T, xUpper: T, yLower: T, yUpper: T) <span class="co">// inclusive</span>
-     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Node[V, T](
-     |     box: Box[T], left: RTree[V, T], right: RTree[V, T])
-     |     <span class="kw">extends</span> RTree[V, T]
-     | }
-defined <span class="kw">trait</span> Data2D
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> Data2D {
+  <span class="kw">case</span> <span class="kw">class</span> Point[T](x: T, y: T)
+  <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
+  <span class="kw">case</span> <span class="kw">class</span> Box[T](xLower: T, xUpper: T, yLower: T, yUpper: T) <span class="co">// inclusive</span>
+  <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Node[V, T](
+    box: Box[T], left: RTree[V, T], right: RTree[V, T])
+    <span class="kw">extends</span> RTree[V, T]
+}
 
-scala&gt; <span class="kw">object</span> data2D <span class="kw">extends</span> Data2D
-defined <span class="kw">object</span> data2D</code></pre>
+<span class="kw">object</span> data2D <span class="kw">extends</span> Data2D</code></pre>
 </div>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> data2D.<span class="fu">_</span>, spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>
-<span class="kw">import</span> data2D.<span class="fu">_</span>
-<span class="kw">import</span> spire.<span class="fu">_</span>
-<span class="kw">import</span> algebra.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> data2D.<span class="fu">_</span>, spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>
 
-scala&gt; <span class="kw">trait</span> Ops2D {
-     |   <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
-     |   <span class="kw">def</span> expandBox[T : Order](box: Box[T], point: Point[T]): Box[T]
-     |   <span class="kw">def</span> expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T]
-     |   <span class="kw">def</span> withinBox[T : Order](box: Box[T], point: Point[T]): Boolean
-     |   <span class="kw">def</span> overlaps[T : Order](box1: Box[T], box2: Box[T]): Boolean
-     |   <span class="kw">def</span> add[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T]
-     |   <span class="kw">def</span> remove[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T]
-     |   <span class="kw">def</span> find[V, T](rtree: RTree[V, T], point: Point[T]): Option[Entry[V, T]]
-     |   <span class="kw">def</span> contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean
-     |   <span class="kw">def</span> search[V, T](space: Box[T]): List[Entry[V, T]]
-     | }
-defined <span class="kw">trait</span> Ops2D</code></pre>
+<span class="kw">trait</span> Ops2D {
+  <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
+  <span class="kw">def</span> expandBox[T : Order](box: Box[T], point: Point[T]): Box[T]
+  <span class="kw">def</span> expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T]
+  <span class="kw">def</span> withinBox[T : Order](box: Box[T], point: Point[T]): Boolean
+  <span class="kw">def</span> overlaps[T : Order](box1: Box[T], box2: Box[T]): Boolean
+  <span class="kw">def</span> add[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T]
+  <span class="kw">def</span> remove[V, T](rtree: RTree[V, T], entry: Entry[V, T]): RTree[V, T]
+  <span class="kw">def</span> find[V, T](rtree: RTree[V, T], point: Point[T]): Option[Entry[V, T]]
+  <span class="kw">def</span> contains[V, T](rtree: RTree[V, T], entry: Entry[V, T]): Boolean
+  <span class="kw">def</span> search[V, T](space: Box[T]): List[Entry[V, T]]
+}</code></pre>
 </section>
 <section class="slide level1">
 
 <p>what if we have more than 2 dimensions?</p>
 <div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> DataDynamicNDim {
-     |   <span class="kw">case</span> <span class="kw">class</span> Point[T](terms: List[T])
-     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
-     |   <span class="kw">case</span> <span class="kw">class</span> Box[T](lowerBounds: List[T], upperBounds: List[T])
-     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Node[V, T](
-     |     box: Box[T], left: RTree[V, T], right: RTree[V, T])
-     |     <span class="kw">extends</span> RTree[V, T]
-     | }
-defined <span class="kw">trait</span> DataDynamicNDim</code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> DataDynamicNDim {
+  <span class="kw">case</span> <span class="kw">class</span> Point[T](terms: List[T])
+  <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
+  <span class="kw">case</span> <span class="kw">class</span> Box[T](lowerBounds: List[T], upperBounds: List[T])
+  <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Node[V, T](
+    box: Box[T], left: RTree[V, T], right: RTree[V, T])
+    <span class="kw">extends</span> RTree[V, T]
+}</code></pre>
 </div>
 </section>
 <section class="slide level1">
@@ -241,22 +234,19 @@ defined <span class="kw">trait</span> DataDynamicNDim</code></pre>
 
 <p>shapeless Sized</p>
 <div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> shapeless.<span class="fu">_</span>, ops.<span class="fu">nat</span>.<span class="fu">_</span>
-<span class="kw">import</span> shapeless.<span class="fu">_</span>
-<span class="kw">import</span> ops.<span class="fu">nat</span>.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> shapeless.<span class="fu">_</span>, ops.<span class="fu">nat</span>.<span class="fu">_</span>
 
-scala&gt; <span class="kw">trait</span> DataSizedNDim {
-     |   <span class="kw">case</span> <span class="kw">class</span> Point[T, N &lt;: Nat](terms: Sized[Seq[T], N])
-     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T, N &lt;: Nat](value: V, point: Point[T, N])
-     |   <span class="kw">case</span> <span class="kw">class</span> Interval[T](l: T, u: T)
-     |   <span class="kw">case</span> <span class="kw">class</span> Box[T, N &lt;: Nat](intervals: Sized[Seq[Interval[T]], N])
-     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[T, N &lt;: Nat]
-     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[T, N &lt;: Nat](point: Point[T, N]) <span class="kw">extends</span> RTree[T, N]
-     |   <span class="kw">case</span> <span class="kw">class</span> Node[T, N &lt;: Nat](
-     |     bound: Box[T, N], left: RTree[T, N], right: RTree[T, N])
-     |     <span class="kw">extends</span> RTree[T, N]
-     | }
-defined <span class="kw">trait</span> DataSizedNDim</code></pre>
+<span class="kw">trait</span> DataSizedNDim {
+  <span class="kw">case</span> <span class="kw">class</span> Point[T, N &lt;: Nat](terms: Sized[Seq[T], N])
+  <span class="kw">case</span> <span class="kw">class</span> Entry[V, T, N &lt;: Nat](value: V, point: Point[T, N])
+  <span class="kw">case</span> <span class="kw">class</span> Interval[T](l: T, u: T)
+  <span class="kw">case</span> <span class="kw">class</span> Box[T, N &lt;: Nat](intervals: Sized[Seq[Interval[T]], N])
+  <span class="kw">sealed</span> <span class="kw">trait</span> RTree[T, N &lt;: Nat]
+  <span class="kw">case</span> <span class="kw">class</span> Leaf[T, N &lt;: Nat](point: Point[T, N]) <span class="kw">extends</span> RTree[T, N]
+  <span class="kw">case</span> <span class="kw">class</span> Node[T, N &lt;: Nat](
+    bound: Box[T, N], left: RTree[T, N], right: RTree[T, N])
+    <span class="kw">extends</span> RTree[T, N]
+}</code></pre>
 </div>
 <div class="fragment">
 <p>perhaps, what if we want heterogeneous types for our dimensions?</p>
@@ -266,21 +256,19 @@ defined <span class="kw">trait</span> DataSizedNDim</code></pre>
 
 <p>shapeless HList</p>
 <div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> DataHListNDim {
-     |   <span class="kw">case</span> <span class="kw">class</span> Point[T &lt;: HList](terms: T)
-     |   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T &lt;: HList](value: V, point: Point[T])
-     |   <span class="kw">case</span> <span class="kw">class</span> Box[T &lt;: HList](lowerBounds: T, upperBounds: T) <span class="co">// inclusive</span>
-     |   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T &lt;: HList]
-     |   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T &lt;: HList]() <span class="kw">extends</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T &lt;: HList](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
-     |   <span class="kw">case</span> <span class="kw">class</span> Node[V, T &lt;: HList](
-     |     box: Box[T], left: RTree[V, T], right: RTree[V, T])
-     |     <span class="kw">extends</span> RTree[V, T]
-     | }
-defined <span class="kw">trait</span> DataHListNDim
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> DataHListNDim {
+  <span class="kw">case</span> <span class="kw">class</span> Point[T &lt;: HList](terms: T)
+  <span class="kw">case</span> <span class="kw">class</span> Entry[V, T &lt;: HList](value: V, point: Point[T])
+  <span class="kw">case</span> <span class="kw">class</span> Box[T &lt;: HList](lowerBounds: T, upperBounds: T) <span class="co">// inclusive</span>
+  <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T &lt;: HList]
+  <span class="kw">case</span> <span class="kw">class</span> Empty[V, T &lt;: HList]() <span class="kw">extends</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T &lt;: HList](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
+  <span class="kw">case</span> <span class="kw">class</span> Node[V, T &lt;: HList](
+    box: Box[T], left: RTree[V, T], right: RTree[V, T])
+    <span class="kw">extends</span> RTree[V, T]
+}
 
-scala&gt; <span class="kw">object</span> dataHListNDim <span class="kw">extends</span> DataHListNDim
-defined <span class="kw">object</span> dataHListNDim</code></pre>
+<span class="kw">object</span> dataHListNDim <span class="kw">extends</span> DataHListNDim</code></pre>
 </div>
 <div class="fragment">
 <p>looks promising</p>
@@ -298,90 +286,83 @@ defined <span class="kw">object</span> dataHListNDim</code></pre>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>, spire.<span class="fu">math</span>.{ min, max }, spire.<span class="fu">implicits</span>.{eqOps =&gt; _, _}
-<span class="kw">import</span> dataHListNDim.<span class="fu">_</span>
-<span class="kw">import</span> shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>
-<span class="kw">import</span> spire.<span class="fu">math</span>.{min, max}
-<span class="kw">import</span> spire.<span class="fu">implicits</span>.{eqOps=&gt;_, _}
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>, spire.<span class="fu">math</span>.{ min, max }, spire.<span class="fu">implicits</span>.{eqOps =&gt; _, _}
 
-scala&gt; <span class="kw">trait</span> OpsHListFunctions {
-     |   <span class="kw">object</span> minimum <span class="kw">extends</span> Poly2 {
-     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](implicitly[Order[T]].<span class="fu">min</span>)
-     |   }
-     |   <span class="kw">object</span> maximum <span class="kw">extends</span> Poly2 {
-     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](implicitly[Order[T]].<span class="fu">max</span>)
-     |   }
-     |   <span class="kw">object</span> lte <span class="kw">extends</span> Poly2 {
-     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](_ &lt;= _)
-     |   }
-     |   <span class="kw">object</span> gte <span class="kw">extends</span> Poly2 {
-     |     <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](_ &gt;= _)
-     |   }
-     |   <span class="kw">object</span> and <span class="kw">extends</span> Poly2 {
-     |     <span class="kw">implicit</span> <span class="kw">def</span> caseBoolean = at[Boolean, Boolean](_ &amp;&amp; _)
-     |   }
-     | }
-defined <span class="kw">trait</span> OpsHListFunctions</code></pre>
+<span class="kw">trait</span> OpsHListFunctions {
+  <span class="kw">object</span> minimum <span class="kw">extends</span> Poly2 {
+    <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](implicitly[Order[T]].<span class="fu">min</span>)
+  }
+  <span class="kw">object</span> maximum <span class="kw">extends</span> Poly2 {
+    <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](implicitly[Order[T]].<span class="fu">max</span>)
+  }
+  <span class="kw">object</span> lte <span class="kw">extends</span> Poly2 {
+    <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](_ &lt;= _)
+  }
+  <span class="kw">object</span> gte <span class="kw">extends</span> Poly2 {
+    <span class="kw">implicit</span> <span class="kw">def</span> default[T : Order] = at[T, T](_ &gt;= _)
+  }
+  <span class="kw">object</span> and <span class="kw">extends</span> Poly2 {
+    <span class="kw">implicit</span> <span class="kw">def</span> caseBoolean = at[Boolean, Boolean](_ &amp;&amp; _)
+  }
+}</code></pre>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> OpsHListTypes { self: OpsHListFunctions =&gt;
-     |   <span class="kw">type</span> ZWMin[T &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, minimum.<span class="fu">type</span>, T]
-     |   <span class="kw">type</span> ZWMax[T &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, maximum.<span class="fu">type</span>, T]
-     |   <span class="kw">type</span> ZWLB[T &lt;: HList] = {
-     |     <span class="kw">type</span> λ[U &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, lte.<span class="fu">type</span>, U]
-     |   }
-     |   <span class="kw">type</span> ZWUB[T &lt;: HList] = {
-     |     <span class="kw">type</span> λ[U &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, gte.<span class="fu">type</span>, U]
-     |   }
-     |   <span class="kw">type</span> LFLB[T &lt;: HList] = {
-     |     <span class="kw">type</span> λ[U &lt;: HList] =
-     |       LeftFolder.<span class="fu">Aux</span>[
-     |         ZipWith.<span class="fu">Aux</span>[T, T, lte.<span class="fu">type</span>, U]#Out,
-     |         Boolean,
-     |         and.<span class="fu">type</span>,
-     |         Boolean]
-     |   }
-     |   <span class="kw">type</span> LFUB[T &lt;: HList] = {
-     |     <span class="kw">type</span> λ[U &lt;: HList] =
-     |       LeftFolder.<span class="fu">Aux</span>[
-     |         ZipWith.<span class="fu">Aux</span>[T, T, gte.<span class="fu">type</span>, U]#Out,
-     |         Boolean,
-     |         and.<span class="fu">type</span>,
-     |         Boolean]
-     |   }
-     | }
-defined <span class="kw">trait</span> OpsHListTypes</code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> OpsHListTypes { self: OpsHListFunctions =&gt;
+  <span class="kw">type</span> ZWMin[T &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, minimum.<span class="fu">type</span>, T]
+  <span class="kw">type</span> ZWMax[T &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, maximum.<span class="fu">type</span>, T]
+  <span class="kw">type</span> ZWLB[T &lt;: HList] = {
+    <span class="kw">type</span> λ[U &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, lte.<span class="fu">type</span>, U]
+  }
+  <span class="kw">type</span> ZWUB[T &lt;: HList] = {
+    <span class="kw">type</span> λ[U &lt;: HList] = ZipWith.<span class="fu">Aux</span>[T, T, gte.<span class="fu">type</span>, U]
+  }
+  <span class="kw">type</span> LFLB[T &lt;: HList] = {
+    <span class="kw">type</span> λ[U &lt;: HList] =
+      LeftFolder.<span class="fu">Aux</span>[
+        ZipWith.<span class="fu">Aux</span>[T, T, lte.<span class="fu">type</span>, U]#Out,
+        Boolean,
+        and.<span class="fu">type</span>,
+        Boolean]
+  }
+  <span class="kw">type</span> LFUB[T &lt;: HList] = {
+    <span class="kw">type</span> λ[U &lt;: HList] =
+      LeftFolder.<span class="fu">Aux</span>[
+        ZipWith.<span class="fu">Aux</span>[T, T, gte.<span class="fu">type</span>, U]#Out,
+        Boolean,
+        and.<span class="fu">type</span>,
+        Boolean]
+  }
+}</code></pre>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">trait</span> OpsHList <span class="kw">extends</span> OpsHListFunctions <span class="kw">with</span> OpsHListTypes {
-     |   <span class="kw">def</span> initBox
-     |     [T &lt;: HList : ZWMin : ZWMax]
-     |     (point1: Point[T], point2: Point[T])
-     |     : Box[T] = Box(
-     |     point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(minimum),
-     |     point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(maximum))
-     |   <span class="kw">def</span> expandBox
-     |     [T &lt;: HList : ZWMin : ZWMax]
-     |     (box: Box[T], point: Point[T])
-     |     : Box[T] = Box(
-     |     box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(minimum),
-     |     box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(maximum))
-     |   <span class="kw">def</span> withinBox
-     |     [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
-     |     (box: Box[T], point: Point[T])
-     |     : Boolean =
-     |     box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(lte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and) &amp;&amp;
-     |     box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(gte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and)
-     |   <span class="kw">def</span> overlaps
-     |     [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
-     |     (box1: Box[T], box2: Box[T])
-     |     : Boolean =
-     |     box1.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(box2.<span class="fu">upperBounds</span>)(lte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and) &amp;&amp;
-     |     box1.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(box2.<span class="fu">lowerBounds</span>)(gte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and)
-     | }
-defined <span class="kw">trait</span> OpsHList</code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> OpsHList <span class="kw">extends</span> OpsHListFunctions <span class="kw">with</span> OpsHListTypes {
+  <span class="kw">def</span> initBox
+    [T &lt;: HList : ZWMin : ZWMax]
+    (point1: Point[T], point2: Point[T])
+    : Box[T] = Box(
+    point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(minimum),
+    point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(maximum))
+  <span class="kw">def</span> expandBox
+    [T &lt;: HList : ZWMin : ZWMax]
+    (box: Box[T], point: Point[T])
+    : Box[T] = Box(
+    box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(minimum),
+    box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(maximum))
+  <span class="kw">def</span> withinBox
+    [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
+    (box: Box[T], point: Point[T])
+    : Boolean =
+    box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(lte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and) &amp;&amp;
+    box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(gte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and)
+  <span class="kw">def</span> overlaps
+    [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
+    (box1: Box[T], box2: Box[T])
+    : Boolean =
+    box1.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(box2.<span class="fu">upperBounds</span>)(lte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and) &amp;&amp;
+    box1.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(box2.<span class="fu">lowerBounds</span>)(gte).<span class="fu">foldLeft</span>(<span class="kw">true</span>)(and)
+}</code></pre>
 <div class="fragment">
 <p>incomplete implementation for for sake of brevity</p>
 </div>
@@ -390,11 +371,8 @@ defined <span class="kw">trait</span> OpsHList</code></pre>
 
 <p>still with me? good, let’s speed this up a bit.</p>
 <div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> ndimrtree.<span class="fu">_</span>, NDimRTree.<span class="fu">_</span>
-<span class="kw">import</span> ndimrtree.<span class="fu">_</span>
-<span class="kw">import</span> NDimRTree.<span class="fu">_</span>
-
-scala&gt; <span class="kw">val</span> b1 = <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="dv">3</span> :: HNil))
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> ndimrtree.<span class="fu">_</span>, NDimRTree.<span class="fu">_</span></code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">val</span> b1 = <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="dv">3</span> :: HNil))
 b1: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">1</span> :: HNil,<span class="dv">3</span> :: HNil)
 
 scala&gt; <span class="kw">val</span> b2 = <span class="fu">initBox</span>(Point(<span class="dv">2</span> :: HNil), Point(<span class="dv">4</span> :: HNil))
@@ -428,51 +406,41 @@ scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</
 <section class="slide level1">
 
 <p>how bout some property based tests</p>
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">import</span> NDimRTreeOps.<span class="fu">_</span>, org.<span class="fu">scalacheck</span>.<span class="fu">_</span>, Arbitrary.<span class="fu">_</span>, Prop.<span class="fu">_</span>, Shapeless.<span class="fu">_</span>
-<span class="kw">import</span> NDimRTreeOps.<span class="fu">_</span>
-<span class="kw">import</span> org.<span class="fu">scalacheck</span>.<span class="fu">_</span>
-<span class="kw">import</span> Arbitrary.<span class="fu">_</span>
-<span class="kw">import</span> Prop.<span class="fu">_</span>
-<span class="kw">import</span> Shapeless.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> NDimRTreeOps.<span class="fu">_</span>, org.<span class="fu">scalacheck</span>.<span class="fu">_</span>, Arbitrary.<span class="fu">_</span>, Prop.<span class="fu">_</span>, Shapeless.<span class="fu">_</span>
 
-scala&gt; <span class="kw">import</span> scalaz.{ Ordering =&gt; _, _ }, Scalaz.<span class="fu">_</span>, shapeless.{ :: =&gt; :×: }
-<span class="kw">import</span> scalaz.{Ordering=&gt;_, _}
-<span class="kw">import</span> Scalaz.<span class="fu">_</span>
-<span class="kw">import</span> shapeless.{$colon$colon=&gt;$colon$u00D7$colon}
+<span class="kw">import</span> scalaz.{ Ordering =&gt; _, _ }, Scalaz.<span class="fu">_</span>, shapeless.{ :: =&gt; :×: }
 
-scala&gt; <span class="kw">class</span> NDimRTreeTest <span class="kw">extends</span> Properties(<span class="st">&quot;NDimRTree&quot;</span>) {
-     |   <span class="kw">type</span> V = String
-     |   <span class="kw">type</span> N = Int :×: Double :×: String :×: HNil
-     |   <span class="kw">implicit</span> <span class="kw">def</span> setEqual[T] = Equal.<span class="fu">equalA</span>[Set[T]]
-     |   <span class="fu">property</span>(<span class="st">&quot;insert entry&quot;</span>) = forAll { (r: RTree[V, N], e: Entry[V, N]) =&gt;
-     |     r.<span class="fu">add</span>(e).<span class="fu">find</span>(e.<span class="fu">point</span>) === e.<span class="fu">some</span>
-     |   }
-     |   <span class="fu">property</span>(<span class="st">&quot;build from list of entries&quot;</span>) = forAll { entries: List[Entry[V, N]] =&gt;
-     |     <span class="fu">RTree</span>(entries).<span class="fu">entries</span>.<span class="fu">toSet</span> === entries.<span class="fu">toSet</span>
-     |   }
-     |   <span class="fu">property</span>(<span class="st">&quot;rtree.contains works&quot;</span>) = forAll { (es: List[Entry[V, N]], e: Entry[V, N]) =&gt;
-     |     <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
-     |     es.<span class="fu">forall</span>(rt.<span class="fu">contains</span>) &amp;&amp; (rt.<span class="fu">contains</span>(e) === es.<span class="fu">contains</span>(e))
-     |   }
-     | }
-defined <span class="kw">class</span> NDimRTreeTest</code></pre>
+<span class="kw">class</span> NDimRTreeTest <span class="kw">extends</span> Properties(<span class="st">&quot;NDimRTree&quot;</span>) {
+  <span class="kw">type</span> V = String
+  <span class="kw">type</span> N = Int :×: Double :×: String :×: HNil
+  <span class="kw">implicit</span> <span class="kw">def</span> setEqual[T] = Equal.<span class="fu">equalA</span>[Set[T]]
+  <span class="fu">property</span>(<span class="st">&quot;insert entry&quot;</span>) = forAll { (r: RTree[V, N], e: Entry[V, N]) =&gt;
+    r.<span class="fu">add</span>(e).<span class="fu">find</span>(e.<span class="fu">point</span>) === e.<span class="fu">some</span>
+  }
+  <span class="fu">property</span>(<span class="st">&quot;build from list of entries&quot;</span>) = forAll { entries: List[Entry[V, N]] =&gt;
+    <span class="fu">RTree</span>(entries).<span class="fu">entries</span>.<span class="fu">toSet</span> === entries.<span class="fu">toSet</span>
+  }
+  <span class="fu">property</span>(<span class="st">&quot;rtree.contains works&quot;</span>) = forAll { (es: List[Entry[V, N]], e: Entry[V, N]) =&gt;
+    <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
+    es.<span class="fu">forall</span>(rt.<span class="fu">contains</span>) &amp;&amp; (rt.<span class="fu">contains</span>(e) === es.<span class="fu">contains</span>(e))
+  }
+}</code></pre>
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">object</span> nDimRTreeTest <span class="kw">extends</span> NDimRTreeTest {
-     |   <span class="fu">property</span>(<span class="st">&quot;rtree.search agrees with withinBox(box, point) filtering&quot;</span>) = forAll {
-     |     (es: List[Entry[V, N]], p1: Point[N], p2: Point[N]) =&gt;
-     |     <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
-     |     <span class="kw">val</span> box1 = <span class="fu">initBox</span>(p1, p2)
-     |     <span class="fu">require</span>(rt.<span class="fu">search</span>(box1).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box1, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
-     |     es.<span class="fu">foreach</span> { e =&gt;
-     |       <span class="kw">val</span> box2 = <span class="fu">initBox</span>(e.<span class="fu">point</span>, p2)
-     |       <span class="fu">require</span>(rt.<span class="fu">search</span>(box2).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box2, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
-     |     }
-     |     <span class="kw">true</span>
-     |   }
-     | }
-defined <span class="kw">object</span> nDimRTreeTest</code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">object</span> nDimRTreeTest <span class="kw">extends</span> NDimRTreeTest {
+  <span class="fu">property</span>(<span class="st">&quot;rtree.search agrees with withinBox(box, point) filtering&quot;</span>) = forAll {
+    (es: List[Entry[V, N]], p1: Point[N], p2: Point[N]) =&gt;
+    <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
+    <span class="kw">val</span> box1 = <span class="fu">initBox</span>(p1, p2)
+    <span class="fu">require</span>(rt.<span class="fu">search</span>(box1).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box1, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
+    es.<span class="fu">foreach</span> { e =&gt;
+      <span class="kw">val</span> box2 = <span class="fu">initBox</span>(e.<span class="fu">point</span>, p2)
+      <span class="fu">require</span>(rt.<span class="fu">search</span>(box2).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box2, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
+    }
+    <span class="kw">true</span>
+  }
+}</code></pre>
 <div class="fragment">
 <pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; nDimRTreeTest.<span class="fu">check</span>
 + NDimRTree.<span class="fu">insert</span> entry: OK, passed <span class="dv">100</span> tests.
