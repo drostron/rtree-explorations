@@ -64,7 +64,7 @@ how bout some code
 
 . . .
 
-```tut
+```tut:silent
 trait Data2D {
   case class Point[T](x: T, y: T)
   case class Entry[V, T](value: V, point: Point[T])
@@ -77,12 +77,13 @@ trait Data2D {
     box: Box[T], left: RTree[V, T], right: RTree[V, T])
     extends RTree[V, T]
 }
+
 object data2D extends Data2D
 ```
 
 ---
 
-```tut
+```tut:silent
 import data2D._, spire._, algebra._
 
 trait Ops2D {
@@ -114,7 +115,7 @@ what if we have more than 2 dimensions?
 
 . . .
 
-```tut
+```tut:silent
 
 trait DataDynamicNDim {
   case class Point[T](terms: List[T])
@@ -176,7 +177,7 @@ shapeless Sized
 
 . . .
 
-```tut
+```tut:silent
 import shapeless._, ops.nat._
 
 trait DataSizedNDim {
@@ -203,7 +204,7 @@ shapeless HList
 
 . . .
 
-```tut
+```tut:silent
 trait DataHListNDim {
   case class Point[T <: HList](terms: T)
   case class Entry[V, T <: HList](value: V, point: Point[T])
@@ -216,6 +217,7 @@ trait DataHListNDim {
     box: Box[T], left: RTree[V, T], right: RTree[V, T])
     extends RTree[V, T]
 }
+
 object dataHListNDim extends DataHListNDim
 ```
 
@@ -234,8 +236,9 @@ note: intentionally postponed a few items
 
 ---
 
-```tut
-import dataHListNDim._, shapeless.ops.hlist._, spire.math.{ min, max }, spire.implicits.{eqOps => _, _}
+```tut:silent
+import dataHListNDim._, shapeless.ops.hlist._
+import spire.math.{ min, max }, spire.implicits.{eqOps => _, _}
 
 trait OpsHListFunctions {
   object minimum extends Poly2 {
@@ -262,7 +265,7 @@ trait OpsHListFunctions {
 
 ---
 
-```tut
+```tut:silent
 trait OpsHListTypes { self: OpsHListFunctions =>
   type ZWMin[T <: HList] = ZipWith.Aux[T, T, minimum.type, T]
   type ZWMax[T <: HList] = ZipWith.Aux[T, T, maximum.type, T]
@@ -295,7 +298,7 @@ trait OpsHListTypes { self: OpsHListFunctions =>
 
 ---
 
-```tut
+```tut:silent
 trait OpsHList extends OpsHListFunctions with OpsHListTypes {
   def initBox
     [T <: HList : ZWMin : ZWMax]
@@ -337,9 +340,11 @@ still with me? good, let's speed this up a bit.
 
 . . .
 
-```tut
+```tut:silent
 import ndimrtree._, NDimRTree._
+```
 
+```tut
 val b1 = initBox(Point(1 :: HNil), Point(3 :: HNil))
 
 val b2 = initBox(Point(2 :: HNil), Point(4 :: HNil))
@@ -369,15 +374,13 @@ illTyped("""
 val t1: RTree[String, Int :: Long :: HNil] = RTree(List(Entry("z", Point(3 :: 1.7 :: HNil))))
 
 """)
-
-
 ```
 
 ---
 
 how bout some property based tests
 
-```tut
+```tut:silent
 import NDimRTreeOps._, org.scalacheck._, Arbitrary._, Prop._, Shapeless._
 import scalaz.{ Ordering => _, _ }, Scalaz._, shapeless.{ :: => :×: }
 
@@ -405,7 +408,7 @@ class NDimRTreeTest extends Properties("NDimRTree") {
 
 ---
 
-```tut
+```tut:silent
 object nDimRTreeTest extends NDimRTreeTest {
 
   property("rtree.search agrees with withinBox(box, point) filtering") = forAll {
