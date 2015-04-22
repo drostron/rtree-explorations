@@ -286,7 +286,9 @@ code > span.er { color: #c3bf9f; }
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>, spire.<span class="fu">math</span>.{ min, max }, spire.<span class="fu">implicits</span>.{eqOps =&gt; _, _}
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> dataHListNDim.<span class="fu">_</span>, shapeless.<span class="fu">ops</span>.<span class="fu">hlist</span>.<span class="fu">_</span>
+
+<span class="kw">import</span> spire.<span class="fu">math</span>.{ min, max }, spire.<span class="fu">implicits</span>.{eqOps =&gt; _, _}
 
 <span class="kw">trait</span> OpsHListFunctions {
   <span class="kw">object</span> minimum <span class="kw">extends</span> Poly2 {
