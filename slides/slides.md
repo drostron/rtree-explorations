@@ -5,7 +5,7 @@ _or how I learned to calm the hyperspatial index_
 
 [Dave Rostron](http://github.com/drostron) — [\@yastero](http://twitter.com/yastero)
 
-Feb 17, 2015
+June 13, 2015
 
 ---
 
@@ -84,9 +84,11 @@ object data2D extends Data2D
 ---
 
 ```tut:silent
-import data2D._, spire._, algebra._
+import spire._, algebra._
 
 trait Ops2D {
+  import data2D._
+
   def initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
 
   def expandBox[T : Order](box: Box[T], point: Point[T]): Box[T]
@@ -119,8 +121,9 @@ what if we have more than 2 dimensions?
 
 trait DataDynamicNDim {
   case class Point[T](terms: List[T])
+  case class Interval[T](l: T, u: T)
   case class Entry[V, T](value: V, point: Point[T])
-  case class Box[T](lowerBounds: List[T], upperBounds: List[T])
+  case class Box[T](intervals: List[Interval[T]])
 
   sealed trait RTree[V, T]
   case class Empty[V, T]() extends RTree[V, T]
@@ -129,6 +132,27 @@ trait DataDynamicNDim {
     box: Box[T], left: RTree[V, T], right: RTree[V, T])
     extends RTree[V, T]
 }
+```
+
+. . .
+
+potential runtime pitfalls
+
+. . .
+
+```tut:silent
+import spire.implicits._, spire.math.{ min, max }
+
+object dynNDim extends DataDynamicNDim {
+  def initBox[T : Order](p1: Point[T], p2: Point[T]) = Box(
+    p1.terms.zip(p2.terms).map { case (i, j) => Interval(min(i, j), max(i, j)) })
+
+  val lossy = initBox(Point(List(0, 0)), Point(List(2, 3, 5, 7)))
+}
+```
+
+```tut
+dynNDim.lossy
 ```
 
 ---
@@ -196,7 +220,30 @@ trait DataSizedNDim {
 
 . . .
 
-perhaps, what if we want heterogeneous types for our dimensions?
+perhaps...
+
+---
+
+size constraint looking good
+
+
+```tut:silent
+import shapeless.syntax.sized._, shapeless.test._
+object sizedNDim extends DataSizedNDim {
+  def initBox[T : Order, N <: Nat : ToInt](p1: Point[T, N], p2: Point[T, N]) =
+    (p1.terms.unsized.zip(p2.terms.unsized).map {
+      case (i, j) => Interval(min(i, j), max(i, j)) }).toList.ensureSized[N]
+}
+```
+
+```tut
+illTyped("""sizedNDim.initBox(
+  sizedNDim.Point(Sized(0, 0)), sizedNDim.Point(Sized(2, 3, 5, 7)))""")
+```
+
+. . .
+
+what if we want heterogeneous types for our dimensions?
 
 ---
 
@@ -220,7 +267,6 @@ trait DataHListNDim {
 
 object dataHListNDim extends DataHListNDim
 ```
-
 . . .
 
 looks promising
@@ -231,7 +277,6 @@ note: intentionally postponed a few items
 
 - balancing
 - splitting
-- performance
 - heterogeneous distance function (_similarity_)
 
 ---
@@ -307,13 +352,6 @@ trait OpsHList extends OpsHListFunctions with OpsHListTypes {
     point1.terms.zipWith(point2.terms)(minimum),
     point1.terms.zipWith(point2.terms)(maximum))
 
-  def expandBox
-    [T <: HList : ZWMin : ZWMax]
-    (box: Box[T], point: Point[T])
-    : Box[T] = Box(
-    box.lowerBounds.zipWith(point.terms)(minimum),
-    box.upperBounds.zipWith(point.terms)(maximum))
-
   def withinBox
     [T <: HList, L <: HList : ZWLB[T]#λ : LFLB[T]#λ, U <: HList : ZWUB[T]#λ : LFUB[T]#λ]
     (box: Box[T], point: Point[T])
@@ -336,115 +374,66 @@ incomplete implementation for for sake of brevity
 
 ---
 
-still with me? good, let's speed this up a bit.
+a quick look at distance
+
+```tut:silent
+trait Distance[T <: HList] {
+  def distance(a: Point[T], b: Point[T]): Number
+}
+
+trait PointOps {
+  def distance[T <: HList : Distance](a: Point[T], b: Point[T]): Number =
+    implicitly[Distance[T]].distance(a, b)
+}
+```
+
+---
+
+still with me? good, here's some of our work in action.
 
 . . .
 
 ```tut:silent
-import ndimrtree._, NDimRTree._
+import ndimrtree._, NDimRTree._, NDimRTreeOps._
 ```
 
 ```tut
-val b1 = initBox(Point(1 :: HNil), Point(3 :: HNil))
-
-val b2 = initBox(Point(2 :: HNil), Point(4 :: HNil))
-
-val b3 = initBox(Point("a" :: HNil), Point("z" :: HNil))
-
-import shapeless.test._
+illTyped("""
+initBox(Point(1 :: HNil), Point(1 :: 2 :: HNil))
+""")
 
 illTyped("""
-
 initBox(Point(1 :: HNil), Point("a" :: HNil))
-
 """)
-
-expandBox(b1, b2)
 
 illTyped("""
-
-expandBox(b1, b3)
-
+expandBox(
+ initBox(Point(1 :: HNil), Point(3 :: HNil)),
+ initBox(Point("a" :: HNil), Point("z" :: HNil)))
 """)
 
-val t1: RTree[String, Int :: Double :: HNil] = RTree(List(Entry("z", Point(3 :: 1.7 :: HNil))))
+RTree(List(Entry("z", Point(3 :: 1.7 :: HNil)))).find(
+  Point(3 :: 1.7 :: HNil)).map(_.value)
 
 illTyped("""
-
-val t1: RTree[String, Int :: Long :: HNil] = RTree(List(Entry("z", Point(3 :: 1.7 :: HNil))))
-
+RTree(List(
+  Entry("z", Point(3 :: 1.7 :: HNil)),
+  Entry("ζ", Point(42 :: HNil))))
 """)
-```
-
----
-
-how bout some property based tests
-
-```tut:silent
-import NDimRTreeOps._, org.scalacheck._, Arbitrary._, Prop._, Shapeless._
-import scalaz.{ Ordering => _, _ }, Scalaz._, shapeless.{ :: => :×: }
-
-class NDimRTreeTest extends Properties("NDimRTree") {
-  type V = String
-  type N = Int :×: Double :×: String :×: HNil
-
-  implicit def setEqual[T] = Equal.equalA[Set[T]]
-
-  property("insert entry") = forAll { (r: RTree[V, N], e: Entry[V, N]) =>
-    r.add(e).find(e.point) === e.some
-  }
-
-  property("build from list of entries") = forAll { entries: List[Entry[V, N]] =>
-    RTree(entries).entries.toSet === entries.toSet
-  }
-
-  property("rtree.contains works") = forAll { (es: List[Entry[V, N]], e: Entry[V, N]) =>
-    val rt = RTree(es)
-
-    es.forall(rt.contains) && (rt.contains(e) === es.contains(e))
-  }
-}
-```
-
----
-
-```tut:silent
-object nDimRTreeTest extends NDimRTreeTest {
-
-  property("rtree.search agrees with withinBox(box, point) filtering") = forAll {
-    (es: List[Entry[V, N]], p1: Point[N], p2: Point[N]) =>
-
-    val rt = RTree(es)
-
-    val box1 = initBox(p1, p2)
-    require(rt.search(box1).toSet === es.filter(e => withinBox(box1, e.point)).toSet)
-
-    es.foreach { e =>
-      val box2 = initBox(e.point, p2)
-      require(rt.search(box2).toSet === es.filter(e => withinBox(box2, e.point)).toSet)
-    }
-    true
-  }
-}
-```
-
-. . .
-
-```tut
-nDimRTreeTest.check
 ```
 
 ---
 
 initial benchmarking:
 
-plenty of room for improvement. just a first naive pass. confident that reasonable performance is achievable.
+room for improvement. just a first naive pass. confident that reasonable performance is achievable.
 
 ---
 
 fun things explored
 
 - generic programming with shapeless
+- leveraging the type system to guarantee certain invariants at compile time
 - indexes
 - R-Trees (but you already know that)
 
@@ -459,8 +448,6 @@ fun things explored
 > - [archery](https://github.com/meetup/archery) : 2D R-Tree implementation in Scala
 >     - leveraged for scalacheck tests and benchmarking
 > - [thyme](https://github.com/Ichoran/thyme) -  microbenchmark utility for Scala
-> - [scalaz](https://github.com/scalaz/scalaz) - An extension to the core Scala library for functional programming
->     - utilized mostly for type-safe equality (_looking forward to spending more time with [cats](https://github.com/non/cats)_)
 > - [tut](https://github.com/tpolecat/tut) - doc/tutorial generator for scala
 >     - sent the code used in this presentation to scalac
 
@@ -469,18 +456,19 @@ fun things explored
 future explorations
 
 - heterogenous distance functions
-- specialization and/or miniboxing
-- visualization with d3, perhaps leverage archery and scala-js
-- turn this exploration into a usable and efficient library
+- visualization with d3, perhaps leverage scala-js
 - R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree
 - distributed implementation
+- utilize similar techniques for other data structures
 
 ---
 
 Thanks!
 
-repo : [rtree-explorations](https://github.com/drostron/rtree-explorations)
+repo:
+[http://github.com/drostron/ndim-rtree](http://github.com/drostron/ndim-rtree)
 
-slides : [Generic N-Dim R-Tree Explorations](http://drostron.github.io/rtree-explorations/slides/pdxscala-2015-february/index.html)
+twitter:
+[\@yastero](http://twitter.com/yastero)
 
 <img src="resources/shapeless-such-future-so-bright.jpg" style="width: 52%; margin-top: 0.5em">

@@ -1,4 +1,23 @@
 
+### feedback from practice run through, 2015-06-12
+- read short quotes, attribute longer quotes
+- at the end say contact me on @twitter or talk to me afterwards if interested in related discussions or contributing
+- archery motion when saying archery
+- left and right subtrees could be a dynamic list of children
+- add/provide concrete example to "potential runtime pitfalls" slide
+- provide an example where Sized doesn't perform what we want
+- would be awesome to add in the Distance function definition
+- remove a bounding box definition or two and show a find, search, ... operation or two
+  - work Distance into this...
+- decide how to attribute?
+
+### feedback from practice run through, 2015-06-12 (done or passed on)
+- twitter handle on last page, actual urls for links (done)
+- delete property based tests slides (done)
+- show example of type failure on initial HList code (ran out of time)
+- maybe turn illTyped into an type error at the repl? (too noisy)
+- prune final HList RTree example a bit (done)
+
 ### ideas, todos, notes
 
 - add '~; tut; sh make -C slides' somewhere with reference to LivePage, keep entr-make.sh around?

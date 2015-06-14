@@ -89,7 +89,7 @@ code > span.er { color: #c3bf9f; }
 <h1>Generic N-Dim <br> R-Tree Explorations</h1>
 <p><em>or how I learned to calm the hyperspatial index</em></p>
 <p><a href="http://github.com/drostron">Dave Rostron</a> — <a href="http://twitter.com/yastero">@yastero</a></p>
-<p>Feb 17, 2015</p>
+<p>June 13, 2015</p>
 </section>
 <section class="slide level1">
 
@@ -162,9 +162,10 @@ code > span.er { color: #c3bf9f; }
 </section>
 <section class="slide level1">
 
-<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> data2D.<span class="fu">_</span>, spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> spire.<span class="fu">_</span>, algebra.<span class="fu">_</span>
 
 <span class="kw">trait</span> Ops2D {
+  <span class="kw">import</span> data2D.<span class="fu">_</span>
   <span class="kw">def</span> initBox[T : Order](point1: Point[T], point2: Point[T]): Box[T]
   <span class="kw">def</span> expandBox[T : Order](box: Box[T], point: Point[T]): Box[T]
   <span class="kw">def</span> expandBox[T : Order](box1: Box[T], box2: Box[T]): Box[T]
@@ -183,8 +184,9 @@ code > span.er { color: #c3bf9f; }
 <div class="fragment">
 <pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> DataDynamicNDim {
   <span class="kw">case</span> <span class="kw">class</span> Point[T](terms: List[T])
+  <span class="kw">case</span> <span class="kw">class</span> Interval[T](l: T, u: T)
   <span class="kw">case</span> <span class="kw">class</span> Entry[V, T](value: V, point: Point[T])
-  <span class="kw">case</span> <span class="kw">class</span> Box[T](lowerBounds: List[T], upperBounds: List[T])
+  <span class="kw">case</span> <span class="kw">class</span> Box[T](intervals: List[Interval[T]])
   <span class="kw">sealed</span> <span class="kw">trait</span> RTree[V, T]
   <span class="kw">case</span> <span class="kw">class</span> Empty[V, T]() <span class="kw">extends</span> RTree[V, T]
   <span class="kw">case</span> <span class="kw">class</span> Leaf[V, T](entry: Entry[V, T]) <span class="kw">extends</span> RTree[V, T]
@@ -192,6 +194,20 @@ code > span.er { color: #c3bf9f; }
     box: Box[T], left: RTree[V, T], right: RTree[V, T])
     <span class="kw">extends</span> RTree[V, T]
 }</code></pre>
+</div>
+<div class="fragment">
+<p>potential runtime pitfalls</p>
+</div>
+<div class="fragment">
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> spire.<span class="fu">implicits</span>.<span class="fu">_</span>, spire.<span class="fu">math</span>.{ min, max }
+
+<span class="kw">object</span> dynNDim <span class="kw">extends</span> DataDynamicNDim {
+  <span class="kw">def</span> initBox[T : Order](p1: Point[T], p2: Point[T]) = Box(
+    p1.<span class="fu">terms</span>.<span class="fu">zip</span>(p2.<span class="fu">terms</span>).<span class="fu">map</span> { <span class="kw">case</span> (i, j) =&gt; <span class="fu">Interval</span>(<span class="fu">min</span>(i, j), <span class="fu">max</span>(i, j)) })
+  <span class="kw">val</span> lossy = <span class="fu">initBox</span>(Point(List(<span class="dv">0</span>, <span class="dv">0</span>)), Point(List(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>)))
+}</code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; dynNDim.<span class="fu">lossy</span>
+res0: dynNDim.<span class="fu">Box</span>[Int] = Box(List(<span class="fu">Interval</span>(<span class="dv">0</span>,<span class="dv">2</span>), <span class="fu">Interval</span>(<span class="dv">0</span>,<span class="dv">3</span>)))</code></pre>
 </div>
 </section>
 <section class="slide level1">
@@ -249,7 +265,23 @@ code > span.er { color: #c3bf9f; }
 }</code></pre>
 </div>
 <div class="fragment">
-<p>perhaps, what if we want heterogeneous types for our dimensions?</p>
+<p>perhaps…</p>
+</div>
+</section>
+<section class="slide level1">
+
+<p>size constraint looking good</p>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> shapeless.<span class="fu">syntax</span>.<span class="fu">sized</span>.<span class="fu">_</span>, shapeless.<span class="fu">test</span>.<span class="fu">_</span>
+
+<span class="kw">object</span> sizedNDim <span class="kw">extends</span> DataSizedNDim {
+  <span class="kw">def</span> initBox[T : Order, N &lt;: Nat : ToInt](p1: Point[T, N], p2: Point[T, N]) =
+    (p1.<span class="fu">terms</span>.<span class="fu">unsized</span>.<span class="fu">zip</span>(p2.<span class="fu">terms</span>.<span class="fu">unsized</span>).<span class="fu">map</span> {
+      <span class="kw">case</span> (i, j) =&gt; <span class="fu">Interval</span>(<span class="fu">min</span>(i, j), <span class="fu">max</span>(i, j)) }).<span class="fu">toList</span>.<span class="fu">ensureSized</span>[N]
+}</code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;sizedNDim.initBox(</span>
+     |   sizedNDim.<span class="fu">Point</span>(<span class="fu">Sized</span>(<span class="dv">0</span>, <span class="dv">0</span>)), sizedNDim.<span class="fu">Point</span>(<span class="fu">Sized</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>)))<span class="st">&quot;&quot;&quot;)</span></code></pre>
+<div class="fragment">
+<p>what if we want heterogeneous types for our dimensions?</p>
 </div>
 </section>
 <section class="slide level1">
@@ -280,7 +312,6 @@ code > span.er { color: #c3bf9f; }
 <ul>
 <li class="fragment">balancing</li>
 <li class="fragment">splitting</li>
-<li class="fragment">performance</li>
 <li class="fragment">heterogeneous distance function (<em>similarity</em>)</li>
 </ul>
 </section>
@@ -346,12 +377,6 @@ code > span.er { color: #c3bf9f; }
     : Box[T] = Box(
     point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(minimum),
     point1.<span class="fu">terms</span>.<span class="fu">zipWith</span>(point2.<span class="fu">terms</span>)(maximum))
-  <span class="kw">def</span> expandBox
-    [T &lt;: HList : ZWMin : ZWMax]
-    (box: Box[T], point: Point[T])
-    : Box[T] = Box(
-    box.<span class="fu">lowerBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(minimum),
-    box.<span class="fu">upperBounds</span>.<span class="fu">zipWith</span>(point.<span class="fu">terms</span>)(maximum))
   <span class="kw">def</span> withinBox
     [T &lt;: HList, L &lt;: HList : ZWLB[T]#λ : LFLB[T]#λ, U &lt;: HList : ZWUB[T]#λ : LFUB[T]#λ]
     (box: Box[T], point: Point[T])
@@ -371,97 +396,57 @@ code > span.er { color: #c3bf9f; }
 </section>
 <section class="slide level1">
 
-<p>still with me? good, let’s speed this up a bit.</p>
+<p>a quick look at distance</p>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> Distance[T &lt;: HList] {
+  <span class="kw">def</span> <span class="fu">distance</span>(a: Point[T], b: Point[T]): Number
+}
+
+<span class="kw">trait</span> PointOps {
+  <span class="kw">def</span> distance[T &lt;: HList : Distance](a: Point[T], b: Point[T]): Number =
+    implicitly[Distance[T]].<span class="fu">distance</span>(a, b)
+}</code></pre>
+</section>
+<section class="slide level1">
+
+<p>still with me? good, here’s some of our work in action.</p>
 <div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> ndimrtree.<span class="fu">_</span>, NDimRTree.<span class="fu">_</span></code></pre>
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="kw">val</span> b1 = <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="dv">3</span> :: HNil))
-b1: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">1</span> :: HNil,<span class="dv">3</span> :: HNil)
-
-scala&gt; <span class="kw">val</span> b2 = <span class="fu">initBox</span>(Point(<span class="dv">2</span> :: HNil), Point(<span class="dv">4</span> :: HNil))
-b2: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">2</span> :: HNil,<span class="dv">4</span> :: HNil)
-
-scala&gt; <span class="kw">val</span> b3 = <span class="fu">initBox</span>(Point(<span class="st">&quot;a&quot;</span> :: HNil), Point(<span class="st">&quot;z&quot;</span> :: HNil))
-b3: ndimrtree.<span class="fu">Box</span>[shapeless.::[String,shapeless.<span class="fu">HNil</span>]] = Box(a :: HNil,z :: HNil)
-
-scala&gt; <span class="kw">import</span> shapeless.<span class="fu">test</span>.<span class="fu">_</span>
-<span class="kw">import</span> shapeless.<span class="fu">test</span>.<span class="fu">_</span>
+<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> ndimrtree.<span class="fu">_</span>, NDimRTree.<span class="fu">_</span>, NDimRTreeOps.<span class="fu">_</span></code></pre>
+<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
+     | <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="dv">1</span> :: <span class="dv">2</span> :: HNil))
+     | <span class="st">&quot;&quot;&quot;)</span>
 
 scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
      | <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="st">&quot;a&quot;</span> :: HNil))
      | <span class="st">&quot;&quot;&quot;)</span>
 
-scala&gt; <span class="fu">expandBox</span>(b1, b2)
-res1: ndimrtree.<span class="fu">Box</span>[shapeless.::[Int,shapeless.<span class="fu">HNil</span>]] = Box(<span class="dv">1</span> :: HNil,<span class="dv">4</span> :: HNil)
-
 scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
-     | <span class="fu">expandBox</span>(b1, b3)
+     | <span class="fu">expandBox</span>(
+     |  <span class="fu">initBox</span>(Point(<span class="dv">1</span> :: HNil), Point(<span class="dv">3</span> :: HNil)),
+     |  <span class="fu">initBox</span>(Point(<span class="st">&quot;a&quot;</span> :: HNil), Point(<span class="st">&quot;z&quot;</span> :: HNil)))
      | <span class="st">&quot;&quot;&quot;)</span>
 
-scala&gt; <span class="kw">val</span> t1: RTree[String, Int :: Double :: HNil] = <span class="fu">RTree</span>(List(<span class="fu">Entry</span>(<span class="st">&quot;z&quot;</span>, Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil))))
-t1: ndimrtree.<span class="fu">RTree</span>[String,shapeless.::[Int,shapeless.::[Double,shapeless.<span class="fu">HNil</span>]]] = <span class="fu">Leaf</span>(<span class="fu">Entry</span>(z,Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil)))
+scala&gt; <span class="fu">RTree</span>(List(<span class="fu">Entry</span>(<span class="st">&quot;z&quot;</span>, Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil)))).<span class="fu">find</span>(
+     |   Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil)).<span class="fu">map</span>(_.<span class="fu">value</span>)
+res5: Option[String] = Some(z)
 
 scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</span>
-     | <span class="kw">val</span> t1: RTree[String, Int :: Long :: HNil] = <span class="fu">RTree</span>(List(<span class="fu">Entry</span>(<span class="st">&quot;z&quot;</span>, Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil))))
+     | <span class="fu">RTree</span>(List(
+     |   <span class="fu">Entry</span>(<span class="st">&quot;z&quot;</span>, Point(<span class="dv">3</span> :: <span class="fl">1.7</span> :: HNil)),
+     |   <span class="fu">Entry</span>(<span class="st">&quot;ζ&quot;</span>, Point(<span class="dv">42</span> :: HNil))))
      | <span class="st">&quot;&quot;&quot;)</span></code></pre>
 </div>
 </section>
 <section class="slide level1">
 
-<p>how bout some property based tests</p>
-<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> NDimRTreeOps.<span class="fu">_</span>, org.<span class="fu">scalacheck</span>.<span class="fu">_</span>, Arbitrary.<span class="fu">_</span>, Prop.<span class="fu">_</span>, Shapeless.<span class="fu">_</span>
-
-<span class="kw">import</span> scalaz.{ Ordering =&gt; _, _ }, Scalaz.<span class="fu">_</span>, shapeless.{ :: =&gt; :×: }
-
-<span class="kw">class</span> NDimRTreeTest <span class="kw">extends</span> Properties(<span class="st">&quot;NDimRTree&quot;</span>) {
-  <span class="kw">type</span> V = String
-  <span class="kw">type</span> N = Int :×: Double :×: String :×: HNil
-  <span class="kw">implicit</span> <span class="kw">def</span> setEqual[T] = Equal.<span class="fu">equalA</span>[Set[T]]
-  <span class="fu">property</span>(<span class="st">&quot;insert entry&quot;</span>) = forAll { (r: RTree[V, N], e: Entry[V, N]) =&gt;
-    r.<span class="fu">add</span>(e).<span class="fu">find</span>(e.<span class="fu">point</span>) === e.<span class="fu">some</span>
-  }
-  <span class="fu">property</span>(<span class="st">&quot;build from list of entries&quot;</span>) = forAll { entries: List[Entry[V, N]] =&gt;
-    <span class="fu">RTree</span>(entries).<span class="fu">entries</span>.<span class="fu">toSet</span> === entries.<span class="fu">toSet</span>
-  }
-  <span class="fu">property</span>(<span class="st">&quot;rtree.contains works&quot;</span>) = forAll { (es: List[Entry[V, N]], e: Entry[V, N]) =&gt;
-    <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
-    es.<span class="fu">forall</span>(rt.<span class="fu">contains</span>) &amp;&amp; (rt.<span class="fu">contains</span>(e) === es.<span class="fu">contains</span>(e))
-  }
-}</code></pre>
-</section>
-<section class="slide level1">
-
-<pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">object</span> nDimRTreeTest <span class="kw">extends</span> NDimRTreeTest {
-  <span class="fu">property</span>(<span class="st">&quot;rtree.search agrees with withinBox(box, point) filtering&quot;</span>) = forAll {
-    (es: List[Entry[V, N]], p1: Point[N], p2: Point[N]) =&gt;
-    <span class="kw">val</span> rt = <span class="fu">RTree</span>(es)
-    <span class="kw">val</span> box1 = <span class="fu">initBox</span>(p1, p2)
-    <span class="fu">require</span>(rt.<span class="fu">search</span>(box1).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box1, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
-    es.<span class="fu">foreach</span> { e =&gt;
-      <span class="kw">val</span> box2 = <span class="fu">initBox</span>(e.<span class="fu">point</span>, p2)
-      <span class="fu">require</span>(rt.<span class="fu">search</span>(box2).<span class="fu">toSet</span> === es.<span class="fu">filter</span>(e =&gt; <span class="fu">withinBox</span>(box2, e.<span class="fu">point</span>)).<span class="fu">toSet</span>)
-    }
-    <span class="kw">true</span>
-  }
-}</code></pre>
-<div class="fragment">
-<pre class="sourceCode scala"><code class="sourceCode scala">scala&gt; nDimRTreeTest.<span class="fu">check</span>
-+ NDimRTree.<span class="fu">insert</span> entry: OK, passed <span class="dv">100</span> tests.
-+ NDimRTree.<span class="fu">build</span> from list of entries: OK, passed <span class="dv">100</span> tests.
-+ NDimRTree.<span class="fu">rtree</span>.<span class="fu">contains</span> works: OK, passed <span class="dv">100</span> tests.
-+ NDimRTree.<span class="fu">rtree</span>.<span class="fu">search</span> agrees <span class="kw">with</span> <span class="fu">withinBox</span>(box, point) filtering: OK, p
-  assed <span class="dv">100</span> tests.</code></pre>
-</div>
-</section>
-<section class="slide level1">
-
 <p>initial benchmarking:</p>
-<p>plenty of room for improvement. just a first naive pass. confident that reasonable performance is achievable.</p>
+<p>room for improvement. just a first naive pass. confident that reasonable performance is achievable.</p>
 </section>
 <section class="slide level1">
 
 <p>fun things explored</p>
 <ul>
 <li class="fragment">generic programming with shapeless</li>
+<li class="fragment">leveraging the type system to guarantee certain invariants at compile time</li>
 <li class="fragment">indexes</li>
 <li class="fragment">R-Trees (but you already know that)</li>
 </ul>
@@ -479,10 +464,6 @@ scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</
 <li>leveraged for scalacheck tests and benchmarking</li>
 </ul></li>
 <li><a href="https://github.com/Ichoran/thyme">thyme</a> - microbenchmark utility for Scala</li>
-<li><a href="https://github.com/scalaz/scalaz">scalaz</a> - An extension to the core Scala library for functional programming
-<ul>
-<li>utilized mostly for type-safe equality (<em>looking forward to spending more time with <a href="https://github.com/non/cats">cats</a></em>)</li>
-</ul></li>
 <li><a href="https://github.com/tpolecat/tut">tut</a> - doc/tutorial generator for scala
 <ul>
 <li>sent the code used in this presentation to scalac</li>
@@ -494,18 +475,17 @@ scala&gt; <span class="fu">illTyped</span>(<span class="st">&quot;&quot;&quot;</
 <p>future explorations</p>
 <ul>
 <li class="fragment">heterogenous distance functions</li>
-<li class="fragment">specialization and/or miniboxing</li>
-<li class="fragment">visualization with d3, perhaps leverage archery and scala-js</li>
-<li class="fragment">turn this exploration into a usable and efficient library</li>
+<li class="fragment">visualization with d3, perhaps leverage scala-js</li>
 <li class="fragment">R-Tree variants, e.g. M-Tree, X-Tree, Hilbert R-tree</li>
 <li class="fragment">distributed implementation</li>
+<li class="fragment">utilize similar techniques for other data structures</li>
 </ul>
 </section>
 <section class="slide level1">
 
 <p>Thanks!</p>
-<p>repo : <a href="https://github.com/drostron/rtree-explorations">rtree-explorations</a></p>
-<p>slides : <a href="http://drostron.github.io/rtree-explorations/slides/pdxscala-2015-february/index.html">Generic N-Dim R-Tree Explorations</a></p>
+<p>repo: <a href="http://github.com/drostron/ndim-rtree" class="uri">http://github.com/drostron/ndim-rtree</a></p>
+<p>twitter: <a href="http://twitter.com/yastero">@yastero</a></p>
 <p><img src="resources/shapeless-such-future-so-bright.jpg" style="width: 52%; margin-top: 0.5em"></p>
 </section>
     </div>
